@@ -1,14 +1,6 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
 
-const mailgun = new Mailgun(formData);
-const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY || '',
-});
-
-const domain = process.env.MAILGUN_DOMAIN || '';
-
 export interface EmailData {
   to: string;
   subject: string;
@@ -17,8 +9,35 @@ export interface EmailData {
   from?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mailgunClient: any = null;
+
+function getMailgunClient() {
+  if (!mailgunClient) {
+    const apiKey = process.env.MAILGUN_API_KEY;
+    const domain = process.env.MAILGUN_DOMAIN;
+    
+    if (!apiKey) {
+      throw new Error('MAILGUN_API_KEY is not configured');
+    }
+    if (!domain) {
+      throw new Error('MAILGUN_DOMAIN is not configured');
+    }
+    
+    const mailgun = new Mailgun(formData);
+    mailgunClient = mailgun.client({
+      username: 'api',
+      key: apiKey,
+    });
+  }
+  return mailgunClient;
+}
+
 export async function sendEmail({ to, subject, html, text, from }: EmailData) {
   try {
+    const mg = getMailgunClient();
+    const domain = process.env.MAILGUN_DOMAIN!;
+    
     const result = await mg.messages.create(domain, {
       from: from || `TandemUp <noreply@${domain}>`,
       to: [to],
