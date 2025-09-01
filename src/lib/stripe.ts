@@ -1,13 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let stripeClient: any = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-08-27.basil",
-});
+function getStripeClient() {
+  if (!stripeClient) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+    }
+    
+    stripeClient = new Stripe(secretKey, {
+      apiVersion: "2025-08-27.basil",
+    });
+  }
+  return stripeClient;
+}
 
 // Price IDs - these should match your Stripe dashboard
 export const PRICE_IDS = {
@@ -31,6 +41,7 @@ export async function createCheckoutSession({
   cancelUrl,
 }: CreateCheckoutSessionParams) {
   try {
+    const stripe = getStripeClient();
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -64,6 +75,7 @@ export async function createCheckoutSession({
 
 export async function createCustomerPortalSession(customerId: string, returnUrl: string) {
   try {
+    const stripe = getStripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
@@ -78,6 +90,7 @@ export async function createCustomerPortalSession(customerId: string, returnUrl:
 
 export async function getSubscriptionStatus(customerId: string) {
   try {
+    const stripe = getStripeClient();
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: 'active',
@@ -114,6 +127,7 @@ export function isValidWebhookSignature(
   secret: string
 ): boolean {
   try {
+    const stripe = getStripeClient();
     stripe.webhooks.constructEvent(payload, signature, secret);
     return true;
   } catch (error) {
@@ -128,6 +142,7 @@ export function constructWebhookEvent(
   secret: string
 ) {
   try {
+    const stripe = getStripeClient();
     return stripe.webhooks.constructEvent(payload, signature, secret);
   } catch (error) {
     console.error('Error constructing webhook event:', error);
