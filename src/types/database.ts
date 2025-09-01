@@ -72,7 +72,7 @@ export interface EmailQueue {
   id: string;
   to_email: string;
   template: string;
-  variables: Record<string, any>;
+  variables: Record<string, string | number | boolean>;
   status: 'pending' | 'sent' | 'failed';
   sent_at?: string;
   created_at: string;

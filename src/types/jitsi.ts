@@ -15,14 +15,14 @@ export interface JitsiMeetConfig {
     startWithAudioMuted?: boolean;
     startWithVideoMuted?: boolean;
     toolbarButtons?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
   };
   interfaceConfigOverwrite?: {
     SHOW_JITSI_WATERMARK?: boolean;
     SHOW_WATERMARK_FOR_GUESTS?: boolean;
     DEFAULT_REMOTE_DISPLAY_NAME?: string;
     TOOLBAR_ALWAYS_VISIBLE?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   onload?: () => void;
   invitees?: Array<{ id: string; name: string; avatar?: string }>;
@@ -45,7 +45,7 @@ export interface JitsiMeetEvents {
   'participantLeft': (data: { id: string; kicked?: boolean }) => void;
   'audioMuteStatusChanged': (data: { muted: boolean }) => void;
   'videoMuteStatusChanged': (data: { muted: boolean }) => void;
-  'screenSharingStatusChanged': (data: { on: boolean; details?: any }) => void;
+  'screenSharingStatusChanged': (data: { on: boolean; details?: unknown }) => void;
   'dominantSpeakerChanged': (data: { id: string }) => void;
   'raiseHandUpdated': (data: { id: string; handRaised: boolean }) => void;
   'tileViewChanged': (data: { enabled: boolean }) => void;
@@ -53,7 +53,7 @@ export interface JitsiMeetEvents {
   'incomingMessage': (data: { from: string; nick: string; message: string; privateMessage?: boolean; timestamp: string }) => void;
   'outgoingMessage': (data: { message: string }) => void;
   'displayNameChange': (data: { id: string; displayName: string }) => void;
-  'deviceListChanged': (data: { devices: any }) => void;
+  'deviceListChanged': (data: { devices: unknown }) => void;
   'emailChange': (data: { id: string; email: string }) => void;
   'feedbackSubmitted': (data: { error?: string }) => void;
   'filmstripDisplayChanged': (data: { visible: boolean }) => void;
@@ -74,10 +74,10 @@ export interface JitsiMeetEvents {
 export interface JitsiMeetAPI {
   addEventListener: <K extends keyof JitsiMeetEvents>(event: K, listener: JitsiMeetEvents[K]) => void;
   removeEventListener: <K extends keyof JitsiMeetEvents>(event: K, listener: JitsiMeetEvents[K]) => void;
-  executeCommand: (command: string, ...args: any[]) => void;
-  executeCommands: (commands: { [command: string]: any }) => void;
-  getAvailableDevices: () => Promise<{ audioInput: any[]; audioOutput: any[]; videoInput: any[] }>;
-  getCurrentDevices: () => Promise<{ audioInput: any; audioOutput: any; videoInput: any }>;
+  executeCommand: (command: string, ...args: unknown[]) => void;
+  executeCommands: (commands: { [command: string]: unknown }) => void;
+  getAvailableDevices: () => Promise<{ audioInput: unknown[]; audioOutput: unknown[]; videoInput: unknown[] }>;
+  getCurrentDevices: () => Promise<{ audioInput: unknown; audioOutput: unknown; videoInput: unknown }>;
   isDeviceChangeAvailable: (deviceType: string) => boolean;
   isDeviceListAvailable: () => boolean;
   isMultipleAudioInputSupported: () => boolean;

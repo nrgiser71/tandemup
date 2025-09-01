@@ -110,7 +110,7 @@ export function getTrialDaysRemaining(trialEndDate: string | Date) {
   return Math.max(0, days);
 }
 
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ) {

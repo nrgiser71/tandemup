@@ -148,7 +148,7 @@ export function VideoSession({
     }
   };
 
-  const handleJoined = (data: any) => {
+  const handleJoined = (data: { displayName?: string; [key: string]: unknown }) => {
     console.log('Joined conference:', data);
     setIsJoined(true);
   };
@@ -158,12 +158,12 @@ export function VideoSession({
     onLeave();
   };
 
-  const handleParticipantJoined = (data: any) => {
+  const handleParticipantJoined = (data: { displayName?: string; [key: string]: unknown }) => {
     console.log('Participant joined:', data);
     setParticipants(prev => [...prev, data.displayName || 'Partner']);
   };
 
-  const handleParticipantLeft = (data: any) => {
+  const handleParticipantLeft = (data: { displayName?: string; [key: string]: unknown }) => {
     console.log('Participant left:', data);
     setParticipants(prev => prev.filter(p => p !== (data.displayName || 'Partner')));
   };

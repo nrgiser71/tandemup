@@ -6,22 +6,23 @@ async function isAdmin(userId: string) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return false;
   
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('email')
     .eq('id', userId)
-    .single();
+    .single() as { data: { email: string } | null };
     
   return profile?.email === adminEmail;
 }
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const {
       data: { user },
@@ -42,7 +43,7 @@ export async function GET(
       );
     }
 
-    const userId = params.id;
+    const userId = id;
 
     // Get user profile with session stats
     const { data: profile, error: profileError } = await supabase
@@ -67,8 +68,8 @@ export async function GET(
 
     // Calculate session stats
     const allSessions = [
-      ...(profile.sessions_as_user1 || []),
-      ...(profile.sessions_as_user2 || [])
+      ...((profile as any).sessions_as_user1 || []),
+      ...((profile as any).sessions_as_user2 || [])
     ];
 
     const stats = {
@@ -97,10 +98,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const {
       data: { user },
@@ -121,7 +123,7 @@ export async function PUT(
       );
     }
 
-    const userId = params.id;
+    const userId = id;
     const body = await request.json();
     const { action, reason, duration } = body;
 

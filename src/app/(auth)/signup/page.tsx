@@ -18,7 +18,7 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: '',
     firstName: '',
-    language: 'en' as const,
+    language: 'en' as 'en' | 'nl' | 'fr',
     timezone: getUserTimezone(),
     acceptTerms: false,
   });

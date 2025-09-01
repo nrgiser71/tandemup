@@ -6,19 +6,19 @@ async function isAdmin(userId: string) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return false;
   
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('email')
     .eq('id', userId)
-    .single();
+    .single() as { data: { email: string } | null };
     
   return profile?.email === adminEmail;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         .then(({ data, count }) => ({ 
           total: count || data?.length || 0,
           // Users active in last 7 days (simplified - based on creation)
-          active: data?.filter(u => 
+          active: data?.filter((u: { created_at: string }) => 
             new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
           ).length || 0
         })),
@@ -67,8 +67,8 @@ export async function GET(request: NextRequest) {
         .then(({ data }) => {
           const stats = {
             total: data?.length || 0,
-            completed: data?.filter(s => s.status === 'completed').length || 0,
-            waiting: data?.filter(s => s.status === 'waiting').length || 0,
+            completed: data?.filter((s: { status: string }) => s.status === 'completed').length || 0,
+            waiting: data?.filter((s: { status: string }) => s.status === 'waiting').length || 0,
           };
           return stats;
         }),
@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .select('subscription_status')
         .then(({ data }) => ({
-          trial: data?.filter(p => p.subscription_status === 'trial').length || 0,
-          paid: data?.filter(p => p.subscription_status === 'active').length || 0,
+          trial: data?.filter((p: { subscription_status: string }) => p.subscription_status === 'trial').length || 0,
+          paid: data?.filter((p: { subscription_status: string }) => p.subscription_status === 'active').length || 0,
         }))
     ]);
 
