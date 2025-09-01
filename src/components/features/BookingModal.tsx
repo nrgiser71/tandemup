@@ -1,0 +1,203 @@
+'use client';
+
+import { useState } from 'react';
+import { TimeSlot, Profile } from '@/types';
+import { SESSION_DURATIONS } from '@/lib/constants';
+import { formatDateTime } from '@/lib/utils';
+import { 
+  X, 
+  Users, 
+  Clock, 
+  Calendar,
+  User,
+  AlertCircle,
+  CheckCircle,
+  Loader2 
+} from 'lucide-react';
+
+interface BookingModalProps {
+  slot: TimeSlot;
+  userProfile: Profile;
+  onClose: () => void;
+  onComplete: () => void;
+}
+
+export function BookingModal({
+  slot,
+  userProfile,
+  onClose,
+  onComplete,
+}: BookingModalProps) {
+  const [selectedDuration, setSelectedDuration] = useState<25 | 50>(25);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isJoiningExisting = slot.status === 'waiting' && slot.waitingUser;
+  const waitingUser = slot.waitingUser;
+
+  const handleBooking = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // TODO: Call API to book the session
+      const bookingData = {
+        datetime: slot.datetime,
+        duration: isJoiningExisting ? waitingUser!.duration : selectedDuration,
+        action: isJoiningExisting ? 'join' : 'create',
+        sessionId: isJoiningExisting ? 'existing-session-id' : undefined,
+      };
+
+      console.log('Booking session:', bookingData);
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Simulate success
+      onComplete();
+    } catch (err) {
+      setError('Failed to book session. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal modal-open">
+      <div className="modal-box max-w-md">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-lg">
+            {isJoiningExisting ? 'Join Session' : 'Book New Session'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="btn btn-sm btn-circle btn-ghost"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Session Details */}
+        <div className="space-y-4 mb-6">
+          {/* Date & Time */}
+          <div className="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+            <Calendar className="w-5 h-5 text-primary" />
+            <div>
+              <div className="font-medium">{formatDateTime(slot.datetime)}</div>
+              <div className="text-sm text-base-content/60">
+                {slot.time} • {new Date(slot.datetime).toLocaleDateString('en-US', { 
+                  weekday: 'long' 
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Partner Info (if joining existing) */}
+          {isJoiningExisting && waitingUser && (
+            <div className="flex items-center gap-3 p-3 bg-success/10 border border-success/20 rounded-lg">
+              <Users className="w-5 h-5 text-success" />
+              <div className="flex-1">
+                <div className="font-medium text-success">
+                  Partner: {waitingUser.firstName}
+                </div>
+                <div className="text-sm text-base-content/60">
+                  Ready to start a {waitingUser.duration}-minute session
+                </div>
+              </div>
+              <div className="badge badge-success badge-sm">
+                Instant Match!
+              </div>
+            </div>
+          )}
+
+          {/* Duration Selection (for new sessions) */}
+          {!isJoiningExisting && (
+            <div className="space-y-2">
+              <label className="label">
+                <span className="label-text font-medium">Session Duration</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {SESSION_DURATIONS.map(duration => (
+                  <button
+                    key={duration}
+                    onClick={() => setSelectedDuration(duration)}
+                    className={`btn ${
+                      selectedDuration === duration
+                        ? 'btn-primary'
+                        : 'btn-outline'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    {duration} min
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* User Info */}
+          <div className="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+            <User className="w-5 h-5 text-accent" />
+            <div>
+              <div className="font-medium">You: {userProfile.first_name}</div>
+              <div className="text-sm text-base-content/60">
+                Language: {userProfile.language.toUpperCase()} • 
+                Timezone: {userProfile.timezone}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Session Structure Info */}
+        <div className="alert alert-info mb-6">
+          <Clock className="w-4 h-4" />
+          <div className="text-sm">
+            <div className="font-medium mb-1">Session Structure:</div>
+            <div>
+              • 2min Check-in (introduce goals)
+              <br />
+              • {isJoiningExisting ? waitingUser!.duration - 4 : selectedDuration - 4}min Focus time (cameras on)
+              <br />
+              • 2min Check-out (share progress)
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="alert alert-error mb-4">
+            <AlertCircle className="w-4 h-4" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="modal-action">
+          <button
+            onClick={onClose}
+            className="btn btn-ghost"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          
+          <button
+            onClick={handleBooking}
+            disabled={loading}
+            className="btn btn-primary"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isJoiningExisting ? 'Join Session' : 'Book Session'}
+          </button>
+        </div>
+
+        {/* Terms */}
+        <div className="text-xs text-base-content/60 text-center mt-4">
+          By booking, you agree to keep your camera on during the session and 
+          follow our community guidelines.
+        </div>
+      </div>
+    </div>
+  );
+}

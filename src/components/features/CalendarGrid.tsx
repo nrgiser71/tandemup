@@ -1,0 +1,200 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { generateTimeSlots } from '@/lib/utils';
+import { TimeSlot } from '@/types';
+import { Clock, Users, Loader2 } from 'lucide-react';
+
+interface CalendarGridProps {
+  selectedDate: Date;
+  onSlotClick: (slot: TimeSlot) => void;
+  userLanguage: 'en' | 'nl' | 'fr';
+}
+
+export function CalendarGrid({
+  selectedDate,
+  onSlotClick,
+  userLanguage,
+}: CalendarGridProps) {
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    generateTimeSlotsForDate();
+  }, [selectedDate, userLanguage]);
+
+  const generateTimeSlotsForDate = async () => {
+    setLoading(true);
+    
+    try {
+      // Generate basic time slots
+      const slots = generateTimeSlots(selectedDate);
+      
+      // TODO: Fetch real data from API to determine slot status
+      // For now, we'll simulate some data
+      const timeSlotsWithStatus: TimeSlot[] = slots.map((slot, index) => {
+        const now = new Date();
+        const slotDateTime = new Date(slot.datetime);
+        
+        // Don't allow booking in the past
+        if (slotDateTime <= now) {
+          return {
+            ...slot,
+            date: selectedDate.toISOString().split('T')[0],
+            available: false,
+            status: 'unavailable',
+          };
+        }
+        
+        // Simulate some slots with waiting users (every 7th slot)
+        if (index % 7 === 0 && Math.random() > 0.6) {
+          return {
+            ...slot,
+            date: selectedDate.toISOString().split('T')[0],
+            available: true,
+            status: 'waiting',
+            waitingUser: {
+              firstName: ['Alice', 'Bob', 'Carol', 'David', 'Eva'][Math.floor(Math.random() * 5)],
+              duration: Math.random() > 0.5 ? 25 : 50,
+            },
+          };
+        }
+        
+        // Make some slots unavailable (simulate existing bookings)
+        if (Math.random() > 0.8) {
+          return {
+            ...slot,
+            date: selectedDate.toISOString().split('T')[0],
+            available: false,
+            status: 'unavailable',
+          };
+        }
+        
+        // Default available slots
+        return {
+          ...slot,
+          date: selectedDate.toISOString().split('T')[0],
+          available: true,
+          status: 'available',
+        };
+      });
+      
+      setTimeSlots(timeSlotsWithStatus);
+    } catch (error) {
+      console.error('Error generating time slots:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSlotClassName = (slot: TimeSlot) => {
+    const baseClasses = 'btn btn-sm h-12 flex-col gap-1 p-2 transition-all duration-200';
+    
+    if (!slot.available || slot.status === 'unavailable') {
+      return `${baseClasses} btn-disabled bg-base-300 text-base-content/40`;
+    }
+    
+    if (slot.status === 'waiting') {
+      return `${baseClasses} btn-success hover:scale-105`;
+    }
+    
+    if (slot.status === 'matched') {
+      return `${baseClasses} btn-info`;
+    }
+    
+    // Default available
+    return `${baseClasses} btn-warning hover:scale-105`;
+  };
+
+  const getSlotIcon = (slot: TimeSlot) => {
+    if (slot.status === 'waiting') {
+      return <Users className="w-3 h-3" />;
+    }
+    
+    if (slot.status === 'matched') {
+      return <Users className="w-3 h-3" />;
+    }
+    
+    return <Clock className="w-3 h-3" />;
+  };
+
+  const getSlotContent = (slot: TimeSlot) => {
+    if (slot.status === 'waiting' && slot.waitingUser) {
+      return (
+        <>
+          <span className="text-xs font-medium">{slot.time}</span>
+          <div className="text-xs opacity-90 leading-tight">
+            {slot.waitingUser.firstName}
+            <br />
+            {slot.waitingUser.duration}min
+          </div>
+        </>
+      );
+    }
+    
+    return (
+      <>
+        <span className="text-xs font-medium">{slot.time}</span>
+        <span className="text-xs opacity-75">Available</span>
+      </>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-base-content/70">Loading available times...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Date Header */}
+      <div className="text-center">
+        <h3 className="text-lg font-semibold">
+          {selectedDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </h3>
+      </div>
+
+      {/* Time Slots Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+        {timeSlots.map((slot, index) => (
+          <button
+            key={`${slot.date}-${slot.time}`}
+            onClick={() => slot.available && onSlotClick(slot)}
+            className={getSlotClassName(slot)}
+            disabled={!slot.available}
+            title={
+              slot.status === 'waiting'
+                ? `Join ${slot.waitingUser?.firstName}'s ${slot.waitingUser?.duration}min session`
+                : slot.status === 'unavailable'
+                ? 'This time slot is not available'
+                : 'Book this time slot'
+            }
+          >
+            <div className="flex items-center gap-1">
+              {getSlotIcon(slot)}
+            </div>
+            {getSlotContent(slot)}
+          </button>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {timeSlots.length === 0 && (
+        <div className="text-center py-12 text-base-content/60">
+          <Clock className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p className="text-lg mb-2">No time slots available</p>
+          <p>Please select a different date.</p>
+        </div>
+      )}
+    </div>
+  );
+}

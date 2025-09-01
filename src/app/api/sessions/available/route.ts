@@ -1,0 +1,155 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { generateTimeSlots } from '@/lib/utils';
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createClient();
+    
+    // Get the user from the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date');
+    
+    if (!date) {
+      return NextResponse.json(
+        { error: 'Date parameter is required' },
+        { status: 400 }
+      );
+    }
+
+    const selectedDate = new Date(date);
+    
+    // Validate date is not in the past
+    if (selectedDate < new Date()) {
+      return NextResponse.json(
+        { error: 'Cannot get slots for past dates' },
+        { status: 400 }
+      );
+    }
+
+    // Get user profile for language matching
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('language, timezone')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Generate basic time slots
+    const basicSlots = generateTimeSlots(selectedDate);
+    
+    // Get existing sessions for this date
+    const startOfDay = new Date(selectedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(selectedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const { data: existingSessions } = await supabase
+      .from('sessions')
+      .select(`
+        id,
+        start_time,
+        duration,
+        status,
+        user1_id,
+        user2_id,
+        profiles!sessions_user1_id_fkey(first_name, language)
+      `)
+      .gte('start_time', startOfDay.toISOString())
+      .lte('start_time', endOfDay.toISOString())
+      .in('status', ['waiting', 'matched']);
+
+    // Create a map of existing sessions by time slot
+    const sessionMap = new Map();
+    existingSessions?.forEach(session => {
+      const sessionTime = new Date(session.start_time).toTimeString().slice(0, 5);
+      sessionMap.set(sessionTime, session);
+    });
+
+    // Process each time slot
+    const processedSlots = basicSlots.map(slot => {
+      const now = new Date();
+      const slotDateTime = new Date(slot.datetime);
+      
+      // Don't allow booking in the past
+      if (slotDateTime <= now) {
+        return {
+          ...slot,
+          date: selectedDate.toISOString().split('T')[0],
+          available: false,
+          status: 'unavailable',
+        };
+      }
+
+      const existingSession = sessionMap.get(slot.time);
+      
+      if (existingSession) {
+        // Check if it's a waiting session with matching language
+        if (
+          existingSession.status === 'waiting' &&
+          existingSession.user1_id !== user.id &&
+          existingSession.profiles?.language === profile.language
+        ) {
+          return {
+            ...slot,
+            date: selectedDate.toISOString().split('T')[0],
+            available: true,
+            status: 'waiting',
+            waitingUser: {
+              firstName: existingSession.profiles.first_name,
+              duration: existingSession.duration,
+            },
+            sessionId: existingSession.id,
+          };
+        }
+        
+        // Session is already matched or not compatible
+        return {
+          ...slot,
+          date: selectedDate.toISOString().split('T')[0],
+          available: false,
+          status: 'unavailable',
+        };
+      }
+      
+      // Available slot
+      return {
+        ...slot,
+        date: selectedDate.toISOString().split('T')[0],
+        available: true,
+        status: 'available',
+      };
+    });
+
+    return NextResponse.json({ 
+      data: processedSlots,
+      userLanguage: profile.language,
+      userTimezone: profile.timezone,
+    });
+  } catch (error) {
+    console.error('Available slots API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

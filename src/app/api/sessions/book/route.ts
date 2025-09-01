@@ -1,0 +1,260 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { v4 as uuidv4 } from 'uuid';
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createClient();
+    
+    // Get the user from the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { datetime, duration, action, sessionId } = body;
+
+    if (!datetime || !duration || !action) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const startTime = new Date(datetime);
+    
+    // Validate start time is in the future
+    if (startTime <= new Date()) {
+      return NextResponse.json(
+        { error: 'Cannot book sessions in the past' },
+        { status: 400 }
+      );
+    }
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is banned or has too many strikes
+    if (profile.is_banned) {
+      return NextResponse.json(
+        { error: 'Account is banned' },
+        { status: 403 }
+      );
+    }
+
+    // Check subscription status
+    const now = new Date();
+    const canBook = profile.subscription_status === 'active' || 
+                   (profile.subscription_status === 'trial' && 
+                    profile.trial_ends_at && new Date(profile.trial_ends_at) > now);
+
+    if (!canBook) {
+      return NextResponse.json(
+        { 
+          error: 'Subscription required to book sessions',
+          requiresSubscription: true 
+        },
+        { status: 402 }
+      );
+    }
+
+    if (action === 'join') {
+      // Join existing session
+      if (!sessionId) {
+        return NextResponse.json(
+          { error: 'Session ID required for join action' },
+          { status: 400 }
+        );
+      }
+
+      // Get the existing session
+      const { data: existingSession, error: sessionError } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .eq('status', 'waiting')
+        .single();
+
+      if (sessionError || !existingSession) {
+        return NextResponse.json(
+          { error: 'Session not found or no longer available' },
+          { status: 404 }
+        );
+      }
+
+      // Check if user is trying to join their own session
+      if (existingSession.user1_id === user.id) {
+        return NextResponse.json(
+          { error: 'Cannot join your own session' },
+          { status: 400 }
+        );
+      }
+
+      // Update the session to add the second user
+      const { data: updatedSession, error: updateError } = await supabase
+        .from('sessions')
+        .update({
+          user2_id: user.id,
+          status: 'matched',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId)
+        .select()
+        .single();
+
+      if (updateError) {
+        return NextResponse.json(
+          { error: 'Failed to join session' },
+          { status: 400 }
+        );
+      }
+
+      // Log the booking action
+      await supabase.from('bookings').insert({
+        user_id: user.id,
+        session_id: sessionId,
+        action: 'booked',
+      });
+
+      // TODO: Send match found emails to both users
+
+      return NextResponse.json({ 
+        data: updatedSession,
+        message: 'Successfully joined session!'
+      });
+    } else if (action === 'create') {
+      // Create new session
+      
+      // Check for existing session at the same time
+      const { data: conflictingSessions } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('user1_id', user.id)
+        .eq('start_time', startTime.toISOString())
+        .in('status', ['waiting', 'matched']);
+
+      if (conflictingSessions && conflictingSessions.length > 0) {
+        return NextResponse.json(
+          { error: 'You already have a session at this time' },
+          { status: 409 }
+        );
+      }
+
+      // Look for potential matches before creating
+      const { data: waitingSessions } = await supabase
+        .from('sessions')
+        .select(`
+          id,
+          duration,
+          user1_id,
+          profiles!sessions_user1_id_fkey(language)
+        `)
+        .eq('start_time', startTime.toISOString())
+        .eq('duration', duration)
+        .eq('status', 'waiting')
+        .neq('user1_id', user.id);
+
+      // Try to find a match with same language
+      const matchingSession = waitingSessions?.find(
+        session => session.profiles?.language === profile.language
+      );
+
+      if (matchingSession) {
+        // Instant match! Join the existing session instead of creating new one
+        const { data: updatedSession, error: matchError } = await supabase
+          .from('sessions')
+          .update({
+            user2_id: user.id,
+            status: 'matched',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', matchingSession.id)
+          .select()
+          .single();
+
+        if (!matchError) {
+          // Log the booking action
+          await supabase.from('bookings').insert({
+            user_id: user.id,
+            session_id: matchingSession.id,
+            action: 'booked',
+          });
+
+          // TODO: Send match found emails
+
+          return NextResponse.json({ 
+            data: updatedSession,
+            message: 'Instant match found!'
+          });
+        }
+      }
+
+      // No match found, create new session
+      const sessionData = {
+        id: uuidv4(),
+        start_time: startTime.toISOString(),
+        duration,
+        user1_id: user.id,
+        status: 'waiting',
+        jitsi_room_name: `tandemup_${uuidv4()}`,
+      };
+
+      const { data: newSession, error: createError } = await supabase
+        .from('sessions')
+        .insert(sessionData)
+        .select()
+        .single();
+
+      if (createError) {
+        return NextResponse.json(
+          { error: 'Failed to create session' },
+          { status: 400 }
+        );
+      }
+
+      // Log the booking action
+      await supabase.from('bookings').insert({
+        user_id: user.id,
+        session_id: newSession.id,
+        action: 'booked',
+      });
+
+      // TODO: Send booking confirmation email
+
+      return NextResponse.json({ 
+        data: newSession,
+        message: 'Session created successfully! Waiting for a partner to join.'
+      });
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid action' },
+        { status: 400 }
+      );
+    }
+  } catch (error) {
+    console.error('Book session API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
