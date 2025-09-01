@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 // Check if user is admin
 async function isAdmin(userId: string) {
   const adminEmail = process.env.ADMIN_EMAIL;
