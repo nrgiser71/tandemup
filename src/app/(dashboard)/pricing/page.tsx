@@ -159,7 +159,7 @@ export default function PricingPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">Your Subscription</h1>
           <p className="text-xl text-base-content/80">
-            You're currently subscribed to TandemUp Pro
+            You&apos;re currently subscribed to TandemUp Pro
           </p>
         </div>
 

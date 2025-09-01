@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
       } else {
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -55,11 +55,11 @@ export default function ForgotPasswordPage() {
           
           <div className="space-y-2">
             <p className="text-base-content/70">
-              We've sent a password reset link to <strong>{email}</strong>
+              We&apos;ve sent a password reset link to <strong>{email}</strong>
             </p>
             <p className="text-sm text-base-content/60">
               Check your email and follow the link to reset your password.
-              If you don't see the email, check your spam folder.
+              If you don&apos;t see the email, check your spam folder.
             </p>
           </div>
 

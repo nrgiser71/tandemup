@@ -55,7 +55,7 @@ export default function SignInPage() {
       } else {
         router.push(ROUTES.DASHBOARD);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -154,7 +154,7 @@ export default function SignInPage() {
         {/* Sign Up Link */}
         <div className="text-center">
           <span className="text-sm text-base-content/60">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href={ROUTES.SIGN_UP} className="link link-primary">
               Sign up for free
             </Link>

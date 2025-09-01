@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const matched: string[] = [];
 
     // Group sessions by time and duration
-    const sessionGroups: { [key: string]: any[] } = {};
+    const sessionGroups: { [key: string]: Session[] } = {};
 
     waitingSessions?.forEach(session => {
       const key = `${session.start_time}_${session.duration}`;
@@ -51,11 +51,11 @@ export async function GET(request: NextRequest) {
     });
 
     // Try to match within each group
-    for (const [key, sessions] of Object.entries(sessionGroups)) {
+    for (const [, sessions] of Object.entries(sessionGroups)) {
       if (sessions.length < 2) continue;
 
       // Group by language for better matches
-      const languageGroups: { [lang: string]: any[] } = {};
+      const languageGroups: { [lang: string]: Session[] } = {};
       sessions.forEach(session => {
         const lang = session.profiles?.language || 'en';
         if (!languageGroups[lang]) {

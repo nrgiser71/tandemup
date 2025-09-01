@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     let emailsSent = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     for (const session of sessionsNeedingReminders) {
       // Check if we already sent reminders for this session

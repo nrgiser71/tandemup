@@ -149,7 +149,7 @@ export default function DashboardPage() {
           <div className="alert alert-info">
             <Users className="w-6 h-6" />
             <div>
-              <h3 className="font-bold">You're on a free trial!</h3>
+              <h3 className="font-bold">You&apos;re on a free trial!</h3>
               <div className="text-sm">
                 Enjoy unlimited sessions for the next {' '}
                 <span className="font-semibold">{trialDaysRemaining} days</span>. 

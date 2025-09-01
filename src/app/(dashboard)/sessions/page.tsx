@@ -342,7 +342,7 @@ export default function MySessionsPage() {
                           <div className="flex items-center gap-2 text-error">
                             <AlertTriangle className="w-4 h-4" />
                             <span className="text-sm">
-                              Your partner didn't show up. This doesn't count against you.
+                              Your partner didn&apos;t show up. This doesn&apos;t count against you.
                             </span>
                           </div>
                         )}

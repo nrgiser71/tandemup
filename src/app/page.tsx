@@ -220,7 +220,7 @@ export default function Home() {
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">Simple Pricing</h2>
           <p className="text-lg text-base-content/70">
-            Start free, upgrade when you're ready
+            Start free, upgrade when you&apos;re ready
           </p>
         </div>
 
