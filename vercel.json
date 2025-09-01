@@ -22,21 +22,6 @@
       "schedule": "0 9 * * *"
     }
   ],
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
-    "STRIPE_PRICE_ID_MONTHLY": "@stripe_price_id_monthly",
-    "STRIPE_PRICE_ID_YEARLY": "@stripe_price_id_yearly",
-    "MAILGUN_API_KEY": "@mailgun_api_key",
-    "MAILGUN_DOMAIN": "@mailgun_domain",
-    "MAILGUN_FROM_EMAIL": "noreply@tandemup.work",
-    "NEXT_PUBLIC_JITSI_DOMAIN": "meet.jit.si",
-    "ADMIN_EMAIL": "admin@tandemup.work"
-  },
   "redirects": [
     {
       "source": "/",
