@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {
@@ -62,7 +62,8 @@ export async function PUT(request: NextRequest) {
     const updates = await request.json();
 
     // Update the profile
-    const { data: profile, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profile, error } = await (supabase as any)
       .from('profiles')
       .update({
         ...updates,

@@ -4,7 +4,7 @@ import { generateTimeSlots } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {

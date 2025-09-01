@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 14); // 14-day trial
 
-    const { error: profileError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileError } = await (supabase as any)
       .from('profiles')
       .upsert({
         id: authData.user.id,
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
       const { subject, html } = generateWelcomeEmail(firstName);
       
       // Add to email queue
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('email_queue')
         .insert({
           user_id: authData.user.id,
@@ -105,7 +107,8 @@ export async function POST(request: NextRequest) {
 
       if (emailResult.success) {
         // Mark as sent in queue
-        await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
           .from('email_queue')
           .update({ 
             status: 'sent',
@@ -116,7 +119,8 @@ export async function POST(request: NextRequest) {
           .eq('status', 'pending');
       } else {
         // Mark as failed in queue
-        await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
           .from('email_queue')
           .update({ 
             status: 'failed',

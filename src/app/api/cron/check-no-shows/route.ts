@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
@@ -36,32 +36,36 @@ export async function GET(request: NextRequest) {
     const noShowUsers: string[] = [];
 
     for (const session of sessions || []) {
-      const user1NoShow = !session.user1_joined;
-      const user2NoShow = !session.user2_joined;
+      const typedSession = session as { user1_joined: boolean; user2_joined: boolean; id: string; user1_id: string; user2_id: string };
+      const user1NoShow = !typedSession.user1_joined;
+      const user2NoShow = !typedSession.user2_joined;
 
       if (user1NoShow || user2NoShow) {
         // Update session status to no_show
-        await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
           .from('sessions')
           .update({
             status: 'no_show',
             updated_at: new Date().toISOString(),
           })
-          .eq('id', session.id);
+          .eq('id', typedSession.id);
 
         // Update no-show counts for users who didn't join
-        if (user1NoShow && session.user1_id) {
-          await supabase.rpc('increment_no_show_count', { 
-            user_id: session.user1_id 
+        if (user1NoShow && typedSession.user1_id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).rpc('increment_no_show_count', { 
+            user_id: typedSession.user1_id 
           });
-          noShowUsers.push(session.user1_id);
+          noShowUsers.push(typedSession.user1_id);
         }
 
-        if (user2NoShow && session.user2_id) {
-          await supabase.rpc('increment_no_show_count', { 
-            user_id: session.user2_id 
+        if (user2NoShow && typedSession.user2_id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).rpc('increment_no_show_count', { 
+            user_id: typedSession.user2_id 
           });
-          noShowUsers.push(session.user2_id);
+          noShowUsers.push(typedSession.user2_id);
         }
 
         processedCount++;
@@ -69,7 +73,7 @@ export async function GET(request: NextRequest) {
         // TODO: Send no-show emails
         // TODO: Apply penalties based on no-show count
         
-        console.log(`Processed no-show for session ${session.id}`);
+        console.log(`Processed no-show for session ${typedSession.id}`);
       }
     }
 

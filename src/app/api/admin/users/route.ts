@@ -6,19 +6,19 @@ async function isAdmin(userId: string) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return false;
   
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('email')
     .eq('id', userId)
-    .single();
+    .single() as { data: { email: string } | null };
     
   return profile?.email === adminEmail;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {
@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    let query = supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query = (supabase as any)
       .from('profiles')
       .select(`
         id,

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Get the user from the session
     const {

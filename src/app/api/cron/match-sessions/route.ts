@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Find all waiting sessions that could be matched
     const { data: waitingSessions, error: waitingError } = await supabase
@@ -40,10 +41,11 @@ export async function GET(request: NextRequest) {
     const matched: string[] = [];
 
     // Group sessions by time and duration
-    const sessionGroups: { [key: string]: Session[] } = {};
+    const sessionGroups: { [key: string]: unknown[] } = {};
 
     waitingSessions?.forEach(session => {
-      const key = `${session.start_time}_${session.duration}`;
+      const typedSession = session as { start_time: string; duration: number; id: string; profiles?: { language: string }; user1_id?: string };
+      const key = `${typedSession.start_time}_${typedSession.duration}`;
       if (!sessionGroups[key]) {
         sessionGroups[key] = [];
       }
@@ -55,9 +57,9 @@ export async function GET(request: NextRequest) {
       if (sessions.length < 2) continue;
 
       // Group by language for better matches
-      const languageGroups: { [lang: string]: Session[] } = {};
+      const languageGroups: { [lang: string]: unknown[] } = {};
       sessions.forEach(session => {
-        const lang = session.profiles?.language || 'en';
+        const lang = (session as any).profiles?.language || 'en';
         if (!languageGroups[lang]) {
           languageGroups[lang] = [];
         }
@@ -70,32 +72,32 @@ export async function GET(request: NextRequest) {
           const session1 = langSessions.shift();
           const session2 = langSessions.shift();
 
-          if (matched.includes(session1.id) || matched.includes(session2.id)) {
+          if (matched.includes((session1 as any).id) || matched.includes((session2 as any).id)) {
             continue;
           }
 
           // Update the first session to include the second user
-          const { error: matchError } = await supabase
+          const { error: matchError } = await (supabase as any)
             .from('sessions')
             .update({
-              user2_id: session2.user1_id,
+              user2_id: (session2 as any).user1_id,
               status: 'matched',
               updated_at: new Date().toISOString(),
             })
-            .eq('id', session1.id);
+            .eq('id', (session1 as any).id);
 
           if (!matchError) {
             // Delete the second session since we merged them
-            await supabase
+            await (supabase as any)
               .from('sessions')
               .delete()
-              .eq('id', session2.id);
+              .eq('id', (session2 as any).id);
 
-            matched.push(session1.id, session2.id);
+            matched.push((session1 as any).id, (session2 as any).id);
             matchedCount++;
 
             // TODO: Send match found emails to both users
-            console.log(`Matched sessions: ${session1.id} with user ${session2.user1_id}`);
+            console.log(`Matched sessions: ${(session1 as any).id} with user ${(session2 as any).user1_id}`);
           }
         }
       }
