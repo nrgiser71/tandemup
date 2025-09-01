@@ -3,12 +3,5 @@
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/",
-      "permanent": false
-    }
-  ]
+  }
 }
