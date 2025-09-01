@@ -4,24 +4,6 @@
       "maxDuration": 30
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron/match-sessions",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/send-reminders",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/check-no-shows",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/trial-expiry",
-      "schedule": "0 9 * * *"
-    }
-  ],
   "redirects": [
     {
       "source": "/",
