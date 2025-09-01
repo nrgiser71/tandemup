@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateTimeSlots } from '@/lib/utils';
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
     // Create a map of existing sessions by time slot
     const sessionMap = new Map();
     existingSessions?.forEach(session => {
-      const sessionTime = new Date(session.start_time).toTimeString().slice(0, 5);
+      const sessionTime = new Date((session as any).start_time).toTimeString().slice(0, 5);
       sessionMap.set(sessionTime, session);
     });
 
@@ -105,9 +106,9 @@ export async function GET(request: NextRequest) {
       if (existingSession) {
         // Check if it's a waiting session with matching language
         if (
-          existingSession.status === 'waiting' &&
-          existingSession.user1_id !== user.id &&
-          existingSession.profiles?.language === profile.language
+          (existingSession as any).status === 'waiting' &&
+          (existingSession as any).user1_id !== user.id &&
+          (existingSession as any).profiles?.language === (profile as any).language
         ) {
           return {
             ...slot,
@@ -115,10 +116,10 @@ export async function GET(request: NextRequest) {
             available: true,
             status: 'waiting',
             waitingUser: {
-              firstName: existingSession.profiles.first_name,
-              duration: existingSession.duration,
+              firstName: (existingSession as any).profiles.first_name,
+              duration: (existingSession as any).duration,
             },
-            sessionId: existingSession.id,
+            sessionId: (existingSession as any).id,
           };
         }
         
@@ -142,8 +143,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ 
       data: processedSlots,
-      userLanguage: profile.language,
-      userTimezone: profile.timezone,
+      userLanguage: (profile as any).language,
+      userTimezone: (profile as any).timezone,
     });
   } catch (error) {
     console.error('Available slots API error:', error);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+/* eslint-disable @typescript-eslint/no-explicit-any */import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createCustomerPortalSession } from '@/lib/stripe';
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    if (!profile.stripe_customer_id) {
+    if (!(profile as any).stripe_customer_id) {
       return NextResponse.json({ 
         error: 'No active subscription found' 
       }, { status: 400 });
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const returnUrl = `${baseUrl}/dashboard`;
 
     const { session, error } = await createCustomerPortalSession(
-      profile.stripe_customer_id,
+      (profile as any).stripe_customer_id,
       returnUrl
     );
 

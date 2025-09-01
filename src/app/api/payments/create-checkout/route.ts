@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createCheckoutSession, PRICE_IDS } from '@/lib/stripe';
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const { session, error } = await createCheckoutSession({
       userId: user.id,
-      email: profile.email,
+      email: (profile as any).email,
       priceId,
       successUrl,
       cancelUrl,

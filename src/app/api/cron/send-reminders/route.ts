@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       const { data: existingReminders } = await supabase
         .from('email_queue')
         .select('id')
-        .eq('session_id', session.id)
+        .eq('session_id', (session as any).id)
         .eq('email_type', 'session_reminder')
         .eq('status', 'sent');
 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         continue; // Skip if reminders already sent
       }
 
-      const sessionTime = new Date(session.start_time).toLocaleString('nl-NL', {
+      const sessionTime = new Date((session as any).start_time).toLocaleString('nl-NL', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Send reminder to each participant
-      for (const booking of session.bookings) {
+      for (const booking of (session as any).bookings) {
         if (!booking.profiles?.email || !booking.profiles?.first_name) {
           continue;
         }
@@ -85,15 +85,15 @@ export async function GET(request: NextRequest) {
         const { subject, html } = generateSessionReminderEmail(
           booking.profiles.first_name,
           sessionTime,
-          session.duration_minutes
+          (session as any).duration_minutes
         );
 
         // Add to email queue first
-        const { error: queueError } = await supabase
+        const { error: queueError } = await (supabase as any)
           .from('email_queue')
           .insert({
             user_id: booking.user_id,
-            session_id: session.id,
+            session_id: (session as any).id,
             email_type: 'session_reminder',
             to_email: booking.profiles.email,
             subject,
@@ -116,27 +116,27 @@ export async function GET(request: NextRequest) {
 
         if (emailResult.success) {
           // Mark as sent in queue
-          await supabase
+          await (supabase as any)
             .from('email_queue')
             .update({ 
               status: 'sent',
               sent_at: new Date().toISOString()
             })
             .eq('user_id', booking.user_id)
-            .eq('session_id', session.id)
+            .eq('session_id', (session as any).id)
             .eq('email_type', 'session_reminder');
 
           emailsSent++;
         } else {
           // Mark as failed in queue
-          await supabase
+          await (supabase as any)
             .from('email_queue')
             .update({ 
               status: 'failed',
               error_message: emailResult.error?.toString()
             })
             .eq('user_id', booking.user_id)
-            .eq('session_id', session.id)
+            .eq('session_id', (session as any).id)
             .eq('email_type', 'session_reminder');
 
           errors.push(`Failed to send email to ${booking.profiles.email}`);

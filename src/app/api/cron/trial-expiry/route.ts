@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail, generateTrialExpiryEmail } from '@/lib/mailgun';
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     const errors: string[] = [];
 
     for (const user of usersWithExpiringTrials) {
-      if (!user.email || !user.first_name) {
+      if (!(user as any).email || !(user as any).first_name) {
         continue;
       }
 
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       const { data: existingEmails } = await supabase
         .from('email_queue')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as any).id)
         .eq('email_type', 'trial_expiry_warning')
         .eq('status', 'sent');
 
@@ -59,15 +60,15 @@ export async function GET(request: NextRequest) {
         continue; // Skip if warning already sent
       }
 
-      const { subject, html } = generateTrialExpiryEmail(user.first_name);
+      const { subject, html } = generateTrialExpiryEmail((user as any).first_name);
 
       // Add to email queue first
-      const { error: queueError } = await supabase
+      const { error: queueError } = await (supabase as any)
         .from('email_queue')
         .insert({
-          user_id: user.id,
+          user_id: (user as any).id,
           email_type: 'trial_expiry_warning',
-          to_email: user.email,
+          to_email: (user as any).email,
           subject,
           html_content: html,
           status: 'pending'
@@ -75,43 +76,43 @@ export async function GET(request: NextRequest) {
 
       if (queueError) {
         console.error('Error adding email to queue:', queueError);
-        errors.push(`Failed to queue email for user ${user.id}`);
+        errors.push(`Failed to queue email for user ${(user as any).id}`);
         continue;
       }
 
       // Send the email
       const emailResult = await sendEmail({
-        to: user.email,
+        to: (user as any).email,
         subject,
         html
       });
 
       if (emailResult.success) {
         // Mark as sent in queue
-        await supabase
+        await (supabase as any)
           .from('email_queue')
           .update({ 
             status: 'sent',
             sent_at: new Date().toISOString()
           })
-          .eq('user_id', user.id)
+          .eq('user_id', (user as any).id)
           .eq('email_type', 'trial_expiry_warning')
           .eq('status', 'pending');
 
         emailsSent++;
       } else {
         // Mark as failed in queue
-        await supabase
+        await (supabase as any)
           .from('email_queue')
           .update({ 
             status: 'failed',
             error_message: emailResult.error?.toString()
           })
-          .eq('user_id', user.id)
+          .eq('user_id', (user as any).id)
           .eq('email_type', 'trial_expiry_warning')
           .eq('status', 'pending');
 
-        errors.push(`Failed to send email to ${user.email}`);
+        errors.push(`Failed to send email to ${(user as any).email}`);
       }
     }
 
@@ -125,10 +126,10 @@ export async function GET(request: NextRequest) {
 
     if (!expiredError && expiredUsers && expiredUsers.length > 0) {
       // Update expired trial users to inactive status
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('profiles')
         .update({ subscription_status: 'inactive' })
-        .in('id', expiredUsers.map(u => u.id));
+        .in('id', expiredUsers.map(u => (u as any).id));
 
       if (updateError) {
         errors.push(`Failed to update ${expiredUsers.length} expired trial users`);

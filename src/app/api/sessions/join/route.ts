@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is authorized to join this session
-    const isParticipant = session.user1_id === user.id || session.user2_id === user.id;
+    const isParticipant = (session as any).user1_id === user.id || (session as any).user2_id === user.id;
     
     if (!isParticipant) {
       return NextResponse.json(
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if session is matched (has both users)
-    if (session.status !== 'matched') {
+    if ((session as any).status !== 'matched') {
       return NextResponse.json(
         { error: 'Session is not ready to join' },
         { status: 400 }
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if session has started (within 5 minutes of start time)
-    const sessionStart = new Date(session.start_time);
+    const sessionStart = new Date((session as any).start_time);
     const now = new Date();
     const fiveMinutesBeforeStart = new Date(sessionStart.getTime() - 5 * 60 * 1000);
     
@@ -73,10 +74,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's joined status
-    const isUser1 = session.user1_id === user.id;
+    const isUser1 = (session as any).user1_id === user.id;
     const updateField = isUser1 ? 'user1_joined' : 'user2_joined';
     
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('sessions')
       .update({
         [updateField]: true,
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       message: 'Successfully joined session',
-      jitsiRoomName: session.jitsi_room_name
+      jitsiRoomName: (session as any).jitsi_room_name
     });
   } catch (error) {
     console.error('Join session API error:', error);

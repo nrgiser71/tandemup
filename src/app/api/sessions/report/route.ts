@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */ 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await (supabase as any).auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the session to verify user is part of it
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await (supabase as any)
       .from('sessions')
       .select('*')
       .eq('id', sessionId)
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is part of this session
-    const isParticipant = session.user1_id === user.id || session.user2_id === user.id;
+    const isParticipant = (session as any).user1_id === user.id || (session as any).user2_id === user.id;
     
     if (!isParticipant) {
       return NextResponse.json(
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if reported user is also part of the session
-    const isReportedUserParticipant = session.user1_id === reportedUserId || session.user2_id === reportedUserId;
+    const isReportedUserParticipant = (session as any).user1_id === reportedUserId || (session as any).user2_id === reportedUserId;
     
     if (!isReportedUserParticipant) {
       return NextResponse.json(
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the report
-    const { data: report, error: reportError } = await supabase
+    const { data: report, error: reportError } = await (supabase as any)
       .from('reports')
       .insert({
         session_id: sessionId,

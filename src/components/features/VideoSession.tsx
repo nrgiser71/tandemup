@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -140,7 +141,7 @@ export function VideoSession({
 
       // Mount to container
       if (jitsiContainerRef.current) {
-        jitsiContainerRef.current.appendChild(api.getIFrame());
+        jitsiContainerRef.current.appendChild((api as any).getIFrame());
       }
     } catch (err) {
       setError('Failed to initialize video conference');

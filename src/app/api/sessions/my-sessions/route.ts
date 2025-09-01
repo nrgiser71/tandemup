@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data for the frontend
-    const transformedSessions = sessions?.map(session => {
+    const transformedSessions = sessions?.map((session: any) => {
       const isUser1 = session.user1_id === user.id;
       const partner = isUser1 ? session.user2 : session.user1;
       const canCancel = session.status === 'waiting' || 
@@ -154,7 +155,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if cancellation is allowed (at least 1 hour before)
-    const sessionStart = new Date(session.start_time);
+    const sessionStart = new Date((session as any).start_time);
     const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
 
     if (sessionStart <= oneHourFromNow) {
@@ -165,7 +166,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Cancel the session
-    const { error: cancelError } = await supabase
+    const { error: cancelError } = await (supabase as any)
       .from('sessions')
       .update({
         status: 'cancelled',
@@ -181,7 +182,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Log the cancellation
-    await supabase.from('bookings').insert({
+    await (supabase as any).from('bookings').insert({
       user_id: user.id,
       session_id: sessionId,
       action: 'cancelled',

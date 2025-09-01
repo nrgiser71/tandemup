@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -85,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
 
-    return { error };
+    return { error: error || undefined };
   };
 
   const signIn = async (data: SignInData) => {
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: data.password,
     });
 
-    return { error };
+    return { error: error || undefined };
   };
 
   const signOut = async () => {
@@ -108,18 +109,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       redirectTo: `${window.location.origin}/reset-password`,
     });
 
-    return { error };
+    return { error: error || undefined };
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-
+      const { error } = await (supabase as any).from("profiles").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", user.id);
       if (error) throw error;
 
       // Refresh profile data
