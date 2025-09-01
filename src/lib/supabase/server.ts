@@ -1,8 +1,10 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 
 export async function createClient() {
+  // Dynamic import to prevent build-time execution
+  const { createServerClient } = await import('@supabase/ssr');
+  const { cookies } = await import('next/headers');
+
   // Check if we have the required environment variables
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
