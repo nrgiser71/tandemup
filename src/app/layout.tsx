@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -52,12 +52,14 @@ export const metadata: Metadata = {
       'Join focused work sessions with accountability partners via video calls.',
     images: ['/og-image.png'],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: '#3B82F6',
+  metadataBase: new URL('https://tandemup.vercel.app'),
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#6366F1',
 };
 
 export default function RootLayout({
@@ -66,8 +68,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="tandemup">
-      <body className={inter.className}>
+    <html lang="en" data-theme="tandemup" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-base-100`} suppressHydrationWarning>
         <Providers>
           <AuthProvider>{children}</AuthProvider>
         </Providers>

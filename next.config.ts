@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Removed optimizeCss to avoid critters dependency issue
 };
 
 export default nextConfig;
