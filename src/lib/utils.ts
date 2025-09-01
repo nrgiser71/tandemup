@@ -90,7 +90,11 @@ export function validateEmail(email: string) {
 
 export function validatePassword(password: string) {
   // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/.test(password);
+  // Allow any printable ASCII characters
+  return password.length >= 8 && 
+         /(?=.*[a-z])/.test(password) && 
+         /(?=.*[A-Z])/.test(password) && 
+         /(?=.*\d)/.test(password);
 }
 
 export function formatDuration(minutes: number) {
