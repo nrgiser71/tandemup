@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { TimeSlot, Profile } from '@/types';
 import { SESSION_DURATIONS } from '@/lib/constants';
 import { formatDateTime } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { 
   X, 
   Users, 
@@ -41,7 +41,6 @@ export function BookingModal({
     setError(null);
 
     try {
-      const supabase = createClient();
       
       // Get the current session to include auth token
       const { data: { session } } = await supabase.auth.getSession();

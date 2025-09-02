@@ -48,9 +48,8 @@ export default function MySessionsPage() {
     setLoadingSessions(true);
     
     try {
-      // Import supabase client here to get session token
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+      // Import supabase singleton client to get session token
+      const { supabase } = await import('@/lib/supabase/client');
       const { data: { session } } = await supabase.auth.getSession();
       
       const headers: Record<string, string> = {
@@ -93,9 +92,8 @@ export default function MySessionsPage() {
 
   const handleCancelSession = async (sessionId: string) => {
     try {
-      // Import supabase client to get session token
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+      // Import supabase singleton client to get session token
+      const { supabase } = await import('@/lib/supabase/client');
       const { data: { session } } = await supabase.auth.getSession();
       
       const headers: Record<string, string> = {
