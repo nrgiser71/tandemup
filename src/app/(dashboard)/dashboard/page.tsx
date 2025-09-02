@@ -417,13 +417,13 @@ export default function DashboardPage() {
                       {/* Actions */}
                       <div className="flex gap-2">
                         {canJoinSession(session) && (
-                          <Link
-                            href={`${ROUTES.SESSION_ROOM}/${session.id}`}
+                          <button
+                            onClick={() => window.open(`${ROUTES.SESSION_ROOM}/${session.id}`, '_blank', 'noopener,noreferrer')}
                             className="btn btn-primary btn-sm"
                           >
                             <Video className="w-4 h-4" />
                             Join
-                          </Link>
+                          </button>
                         )}
                         
                         {session.canCancel && (
