@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { generateTimeSlots } from '@/lib/utils';
 import { TimeSlot } from '@/types';
 import { Clock, Users, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface CalendarGridProps {
   selectedDate: Date;
@@ -27,12 +28,23 @@ export function CalendarGrid({
     setLoading(true);
     
     try {
+      const supabase = createClient();
+      
+      // Get the current session to include auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
       // Fetch available slots from API
       const response = await fetch(`/api/sessions/available?date=${selectedDate.toISOString().split('T')[0]}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {

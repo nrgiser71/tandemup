@@ -1,4 +1,5 @@
 import type { Database } from '@/types/database';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export async function createClient() {
   // Dynamic import to prevent build-time execution
@@ -37,4 +38,21 @@ export async function createClient() {
       },
     }
   );
+}
+
+// Admin client for operations that need to bypass RLS
+export function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+  }
+
+  return createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 }

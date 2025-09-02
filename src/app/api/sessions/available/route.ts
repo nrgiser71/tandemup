@@ -9,11 +9,22 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Get the user from the session
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Try to get authorization header first
+    const authHeader = request.headers.get('authorization');
+    let user = null;
+    let authError = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const { data, error } = await supabase.auth.getUser(token);
+      user = data.user;
+      authError = error;
+    } else {
+      // Fallback to session-based auth
+      const { data, error } = await supabase.auth.getUser();
+      user = data.user;
+      authError = error;
+    }
 
     if (authError || !user) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { TimeSlot, Profile } from '@/types';
 import { SESSION_DURATIONS } from '@/lib/constants';
 import { formatDateTime } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { 
   X, 
   Users, 
@@ -40,6 +41,15 @@ export function BookingModal({
     setError(null);
 
     try {
+      const supabase = createClient();
+      
+      // Get the current session to include auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Please log in to book a session');
+      }
+
       const bookingData = {
         datetime: slot.datetime,
         duration: isJoiningExisting ? waitingUser!.duration : selectedDuration,
@@ -51,6 +61,7 @@ export function BookingModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(bookingData),
       });
