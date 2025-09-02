@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    let profile = profileData;
+    let profile: any = profileData;
     if (!profile) {
       console.log('No profile found for user in available API, using demo mode with default profile');
       
