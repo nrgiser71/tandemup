@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Update the session to add the second user
-      const { data: updatedSession, error: updateError } = await supabase
+      const { data: updatedSession, error: updateError } = await (supabase as any)
         .from('sessions')
         .update({
           user2_id: user.id,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Log the booking action
-      const { error: bookingError } = await supabase.from('bookings').insert({
+      const { error: bookingError } = await (supabase as any).from('bookings').insert({
         user_id: user.id,
         session_id: sessionId,
         action: 'booked',
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
 
         if (!matchError) {
           // Log the booking action
-          const { error: bookingError } = await supabase.from('bookings').insert({
+          const { error: bookingError } = await (supabase as any).from('bookings').insert({
             user_id: user.id,
             session_id: (matchingSession as any).id,
             action: 'booked',
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       console.log('Creating new session:', sessionData);
 
       // Insert session into database
-      const { data: newSession, error: createError } = await supabase
+      const { data: newSession, error: createError } = await (supabase as any)
         .from('sessions')
         .insert(sessionData)
         .select()
@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Log the booking action
-      const { error: bookingError } = await supabase.from('bookings').insert({
+      const { error: bookingError } = await (supabase as any).from('bookings').insert({
         user_id: user.id,
         session_id: sessionData.id,
         action: 'booked',
