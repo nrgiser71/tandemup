@@ -256,27 +256,35 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       };
 
-      console.log('Demo mode: Simulating session creation:', sessionData);
+      console.log('Creating new session:', sessionData);
 
-      // TODO: In production, this would insert into database
-      // const { data: newSession, error: createError } = await (supabase as any)
-      //   .from('sessions')
-      //   .insert(sessionData)
-      //   .select()
-      //   .single();
+      // Insert session into database
+      const { data: newSession, error: createError } = await (supabase as any)
+        .from('sessions')
+        .insert(sessionData)
+        .select()
+        .single();
 
-      // TODO: In production, this would log the booking
-      // await (supabase as any).from('bookings').insert({
-      //   user_id: user.id,
-      //   session_id: sessionData.id,
-      //   action: 'booked',
-      // });
+      if (createError) {
+        console.error('Failed to create session:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create session' },
+          { status: 400 }
+        );
+      }
+
+      // Log the booking action
+      await (supabase as any).from('bookings').insert({
+        user_id: user.id,
+        session_id: sessionData.id,
+        action: 'booked',
+      });
 
       // TODO: Send booking confirmation email
 
       return NextResponse.json({ 
-        data: sessionData,
-        message: 'Session created successfully! Waiting for a partner to join. (Demo mode - not saved to database)'
+        data: newSession,
+        message: 'Session created successfully! Waiting for a partner to join.'
       });
     } else {
       return NextResponse.json(

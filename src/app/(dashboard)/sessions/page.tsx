@@ -71,7 +71,7 @@ export default function MySessionsPage() {
   const handleCancelSession = async (sessionId: string) => {
     try {
       const response = await fetch('/api/sessions/cancel', {
-        method: 'DELETE',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },

@@ -54,17 +54,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user profile for language matching
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('language, timezone')
       .eq('id', user.id)
       .single();
 
+    let profile = profileData;
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
+      console.log('No profile found for user in available API, using demo mode with default profile');
+      
+      // Create a mock profile for demo purposes (since Supabase is not configured)
+      profile = {
+        language: 'en',
+        timezone: 'Europe/Amsterdam',
+      };
     }
 
     // Generate basic time slots
