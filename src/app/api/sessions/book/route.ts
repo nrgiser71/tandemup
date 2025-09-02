@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       .eq('id', actualUser.id)
       .single();
 
-    console.log('Profile query result:', { profile: profileData, profileError, userId: user.id });
+    console.log('Profile query result:', { profile: profileData, profileError, userId: actualUser.id });
 
     let profile: any = profileData;
     if (!profile) {
