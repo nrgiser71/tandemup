@@ -78,7 +78,7 @@ export function VideoSession({
     }
 
     const script = document.createElement('script');
-    const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || 'meet.jit.si';
+    const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || '8x8.vc';
     script.src = `https://${jitsiDomain}/external_api.js`;
     console.log('Loading Jitsi from:', script.src);
     script.async = true;
@@ -90,10 +90,10 @@ export function VideoSession({
   const initializeJitsi = () => {
     if (!jitsiContainerRef.current || !session.jitsiRoomName) return;
 
-    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || 'meet.jit.si';
+    const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || '8x8.vc';
     
     const options = {
-      roomName: session.jitsiRoomName,
+      roomName: `${session.jitsiRoomName}_${Date.now()}`, // Unique room to avoid moderator conflicts
       width: '100%',
       height: '100%',
       configOverwrite: {
