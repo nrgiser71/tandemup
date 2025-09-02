@@ -108,7 +108,7 @@ test.describe('TandemUp Booking Functionality', () => {
     await page.waitForLoadState('networkidle');
     
     // Listen for API responses to check for errors
-    const bookingRequests: any[] = [];
+    const bookingRequests: { status: number; url: string }[] = [];
     page.on('response', response => {
       if (response.url().includes('/api/sessions/book')) {
         bookingRequests.push({

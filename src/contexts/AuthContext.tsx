@@ -10,6 +10,8 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  error: string | null;
+  retry: () => void;
   signUp: (data: SignUpData) => Promise<{ error?: AuthError }>;
   signIn: (data: SignInData) => Promise<{ error?: AuthError }>;
   signOut: () => Promise<void>;
@@ -23,20 +25,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session with timeout and retry logic
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+      try {
+        setError(null);
+        console.log('AuthContext: Starting initial session check...');
+        
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Session check timeout')), 10000);
+        });
+        
+        const sessionPromise = supabase.auth.getSession();
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+        
+        console.log('AuthContext: Session check complete:', !!session?.user);
+        
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        }
+        
+        setLoading(false);
+        setRetryCount(0);
+      } catch (error: any) {
+        console.error('AuthContext: Initial session check failed:', error);
+        setError(error.message || 'Failed to connect to authentication service');
+        
+        // Exponential backoff retry
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+        
+        if (retryCount < 3) {
+          console.log(`AuthContext: Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, delay);
+        } else {
+          console.log('AuthContext: Max retries reached, stopping loading');
+          setLoading(false);
+        }
       }
-      
-      setLoading(false);
     };
 
     getInitialSession();
@@ -45,6 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: Auth state changed:', event, !!session?.user);
+      
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
@@ -53,24 +87,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
       }
       setLoading(false);
+      setError(null);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [retryCount]);
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      console.log('AuthContext: Fetching profile for user:', userId);
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 8000);
+      });
+      
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
       if (error) throw error;
       setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.log('AuthContext: Profile fetched successfully');
+    } catch (error: any) {
+      console.error('AuthContext: Error fetching profile:', error);
+      // Don't fail the entire auth process if profile fetch fails
+      setProfile(null);
     }
+  };
+
+  const retry = () => {
+    console.log('AuthContext: Manual retry initiated');
+    setLoading(true);
+    setError(null);
+    setRetryCount(0);
   };
 
   const signUp = async (data: SignUpData) => {
@@ -132,6 +185,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     loading,
+    error,
+    retry,
     signUp,
     signIn,
     signOut,
