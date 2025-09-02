@@ -1,20 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { CalendarGrid } from '@/components/features/CalendarGrid';
 import { BookingModal } from '@/components/features/BookingModal';
 import { addDays } from '@/lib/utils';
 import { TimeSlot } from '@/types';
-import { Calendar, Users, Clock } from 'lucide-react';
+import { Calendar, Users, Clock, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function BookSessionPage() {
   const { user, profile, loading } = useAuth();
+  const router = useRouter();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('No user found, redirecting to auth');
+      window.location.href = '/auth';
+      return;
+    }
+  }, [loading, user]);
 
   if (loading) {
     return (
@@ -24,8 +35,26 @@ export default function BookSessionPage() {
     );
   }
 
+  // Show login message if no user (while redirect is happening)
   if (!user || !profile) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="card bg-base-100 shadow-lg max-w-md">
+          <div className="card-body text-center">
+            <AlertCircle className="w-12 h-12 text-warning mx-auto mb-4" />
+            <h2 className="card-title justify-center mb-2">Login Required</h2>
+            <p className="text-base-content/70 mb-4">
+              You need to log in to book a session.
+            </p>
+            <div className="card-actions justify-center">
+              <a href="/auth" className="btn btn-primary">
+                Go to Login
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleSlotClick = (slot: TimeSlot) => {

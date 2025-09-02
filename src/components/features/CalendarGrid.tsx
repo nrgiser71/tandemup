@@ -48,7 +48,9 @@ export function CalendarGrid({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch available slots');
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`Failed to fetch available slots: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();

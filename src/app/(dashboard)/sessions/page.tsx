@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Plus,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function MySessionsPage() {
@@ -27,6 +28,15 @@ export default function MySessionsPage() {
   const [pastSessions, setPastSessions] = useState<SessionDetails[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('No user found, redirecting to auth');
+      window.location.href = '/auth';
+      return;
+    }
+  }, [loading, user]);
 
   useEffect(() => {
     if (user && profile) {
@@ -123,8 +133,26 @@ export default function MySessionsPage() {
     );
   }
 
+  // Show login message if no user (while redirect is happening)
   if (!user || !profile) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="card bg-base-100 shadow-lg max-w-md">
+          <div className="card-body text-center">
+            <AlertCircle className="w-12 h-12 text-warning mx-auto mb-4" />
+            <h2 className="card-title justify-center mb-2">Login Required</h2>
+            <p className="text-base-content/70 mb-4">
+              You need to log in to view your sessions.
+            </p>
+            <div className="card-actions justify-center">
+              <a href="/auth" className="btn btn-primary">
+                Go to Login
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
