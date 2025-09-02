@@ -40,6 +40,7 @@ export function CalendarGrid({
       }
 
       const result = await response.json();
+      console.log('CalendarGrid API response:', result);
       setTimeSlots(result.data || []);
     } catch (error) {
       console.error('Error fetching time slots:', error);
@@ -49,10 +50,11 @@ export function CalendarGrid({
       const basicSlots: TimeSlot[] = slots.map(slot => ({
         ...slot,
         date: selectedDate.toISOString().split('T')[0],
-        available: false,
-        status: 'unavailable',
+        available: true, // Change this to true for testing
+        status: 'available',
       }));
       
+      console.log('CalendarGrid fallback slots:', basicSlots);
       setTimeSlots(basicSlots);
     } finally {
       setLoading(false);
@@ -137,26 +139,32 @@ export function CalendarGrid({
 
       {/* Time Slots Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-        {timeSlots.map((slot, index) => (
-          <button
-            key={`${slot.date}-${slot.time}`}
-            onClick={() => slot.available && onSlotClick(slot)}
-            className={getSlotClassName(slot)}
-            disabled={!slot.available}
-            title={
-              slot.status === 'waiting' && slot.waitingUser
-                ? `Join ${slot.waitingUser.firstName}'s ${slot.waitingUser.duration}min session`
-                : slot.status === 'unavailable'
-                ? 'This time slot is not available'
-                : 'Book this time slot'
-            }
-          >
-            <div className="flex items-center gap-1">
-              {getSlotIcon(slot)}
-            </div>
-            {getSlotContent(slot)}
-          </button>
-        ))}
+        {timeSlots.map((slot, index) => {
+          if (index === 0) console.log('First slot debug:', { available: slot.available, status: slot.status, slot });
+          return (
+            <button
+              key={`${slot.date}-${slot.time}`}
+              onClick={() => {
+                console.log('Slot clicked:', { available: slot.available, status: slot.status, slot });
+                slot.available && onSlotClick(slot);
+              }}
+              className={getSlotClassName(slot)}
+              disabled={!slot.available}
+              title={
+                slot.status === 'waiting' && slot.waitingUser
+                  ? `Join ${slot.waitingUser.firstName}'s ${slot.waitingUser.duration}min session`
+                  : slot.status === 'unavailable'
+                  ? 'This time slot is not available'
+                  : 'Book this time slot'
+              }
+            >
+              <div className="flex items-center gap-1">
+                {getSlotIcon(slot)}
+              </div>
+              {getSlotContent(slot)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Empty State */}
