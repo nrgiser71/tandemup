@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
           user2: null
         }, {
           id: 'mock-session-2',
-          start_time: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+          start_time: new Date(now.getTime() + 2 * 60 * 1000).toISOString(), // 2 minutes from now
           duration: 50,
           status: 'matched',
           user1_id: mockUser.id,
