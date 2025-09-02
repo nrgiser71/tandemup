@@ -21,8 +21,8 @@ export default function BookSessionPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      console.log('No user found, redirecting to auth');
-      window.location.href = '/auth';
+      console.log('No user found, redirecting to signin');
+      window.location.href = '/signin';
       return;
     }
   }, [loading, user]);
@@ -47,7 +47,7 @@ export default function BookSessionPage() {
               You need to log in to book a session.
             </p>
             <div className="card-actions justify-center">
-              <a href="/auth" className="btn btn-primary">
+              <a href="/signin" className="btn btn-primary">
                 Go to Login
               </a>
             </div>

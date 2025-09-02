@@ -63,6 +63,7 @@ export function BookingModal({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(bookingData),
       });
 

@@ -33,7 +33,7 @@ export default function MySessionsPage() {
   useEffect(() => {
     if (!loading && !user) {
       console.log('No user found, redirecting to auth');
-      window.location.href = '/auth';
+      window.location.href = '/signin';
       return;
     }
   }, [loading, user]);
@@ -48,11 +48,24 @@ export default function MySessionsPage() {
     setLoadingSessions(true);
     
     try {
+      // Import supabase client here to get session token
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if we have a session
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      
       const response = await fetch('/api/sessions/my-sessions', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -80,11 +93,24 @@ export default function MySessionsPage() {
 
   const handleCancelSession = async (sessionId: string) => {
     try {
+      // Import supabase client to get session token
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if we have a session
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      
       const response = await fetch('/api/sessions/cancel', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ sessionId }),
       });
 
@@ -145,7 +171,7 @@ export default function MySessionsPage() {
               You need to log in to view your sessions.
             </p>
             <div className="card-actions justify-center">
-              <a href="/auth" className="btn btn-primary">
+              <a href="/signin" className="btn btn-primary">
                 Go to Login
               </a>
             </div>
