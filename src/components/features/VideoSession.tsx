@@ -325,30 +325,12 @@ export function VideoSession({
         }}
       />
 
-      {/* Loading State - Full screen until connected */}
+      {/* Loading State - Non-blocking corner indicator */}
       {!isJoined && isJitsiLoaded && (
-        <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-md flex items-center justify-center">
-          <div className="text-center max-w-md px-6">
-            <div className="loading loading-spinner loading-lg text-primary mx-auto mb-6"></div>
-            <h2 className="text-2xl font-bold text-white mb-4">Connecting to Session</h2>
-            <p className="text-white/80 mb-6">Setting up your video conference...</p>
-            <div className="bg-white/10 rounded-lg p-4 text-left">
-              <p className="text-sm text-white/70 mb-2">Next steps:</p>
-              <ul className="text-sm text-white/90 space-y-1">
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  Click &quot;Join Meeting&quot; when prompted
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
-                  Allow camera and microphone access
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
-                  Your session will begin automatically
-                </li>
-              </ul>
-            </div>
+        <div className="absolute top-4 right-4 z-10 bg-black/80 backdrop-blur-md rounded-lg px-4 py-2 text-white">
+          <div className="flex items-center gap-2">
+            <div className="loading loading-spinner loading-sm"></div>
+            <span className="text-sm">Waiting to join...</span>
           </div>
         </div>
       )}
