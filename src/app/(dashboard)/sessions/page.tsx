@@ -143,10 +143,8 @@ export default function MySessionsPage() {
   };
 
   const canJoinSession = (session: SessionDetails) => {
-    if (session.status !== 'matched') return false;
-    
-    const timeUntil = getTimeUntil(session.startTime);
-    return timeUntil && timeUntil.totalMinutes <= 5; // Can join 5 minutes before
+    // Always allow joining for testing purposes
+    return session.status === 'matched';
   };
 
   if (loading || loadingSessions) {

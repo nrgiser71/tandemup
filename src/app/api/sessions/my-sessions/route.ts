@@ -75,11 +75,16 @@ export async function GET(request: NextRequest) {
 
     const { data: sessions, error } = await query;
 
-    if (error) {
+    // For testing: Force mock data by simulating error
+    const forceMockData = true; // Set to false to use real database
+    const mockError = forceMockData ? { message: 'Forced mock data for testing' } : null;
+
+    if (error || mockError) {
       console.error('Database query error:', error);
       
       // If we're using mock user and database fails, return mock data
-      if (mockUser) {
+      // For testing: also return mock data for authenticated users
+      if (mockUser || forceMockData) {
         console.log('Returning mock sessions data');
         const now = new Date();
         const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -87,32 +92,46 @@ export async function GET(request: NextRequest) {
         // Create multiple mock sessions to simulate different states
         const mockSessions = [{
           id: 'mock-session-1',
-          start_time: tomorrow.toISOString(),
+          start_time: new Date(now.getTime() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
           duration: 25,
-          status: 'waiting',
-          user1_id: mockUser.id,
-          user2_id: null,
+          status: 'matched',
+          user1_id: actualUser.id,
+          user2_id: 'partner-user-123',
           jitsi_room_name: 'tandemup_mock_room',
           user1_joined: false,
           user2_joined: false,
           created_at: now.toISOString(),
           updated_at: now.toISOString(),
-          user1: { id: mockUser.id, first_name: 'Jan', avatar_url: null },
-          user2: null
+          user1: { id: actualUser.id, first_name: 'Jan', avatar_url: null },
+          user2: { id: 'partner-user-123', first_name: 'Alex', avatar_url: null }
         }, {
           id: 'mock-session-2',
           start_time: new Date(now.getTime() + 2 * 60 * 1000).toISOString(), // 2 minutes from now
           duration: 50,
           status: 'matched',
-          user1_id: mockUser.id,
+          user1_id: actualUser.id,
           user2_id: 'partner-user-456',
           jitsi_room_name: 'tandemup_matched_room',
           user1_joined: false,
           user2_joined: false,
           created_at: new Date(now.getTime() - 15 * 60 * 1000).toISOString(), // Created 15 min ago
           updated_at: new Date(now.getTime() - 5 * 60 * 1000).toISOString(), // Matched 5 min ago
-          user1: { id: mockUser.id, first_name: 'Jan', avatar_url: null },
+          user1: { id: actualUser.id, first_name: 'Jan', avatar_url: null },
           user2: { id: 'partner-user-456', first_name: 'Sarah', avatar_url: null }
+        }, {
+          id: 'mock-session-3',
+          start_time: new Date(now.getTime() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
+          duration: 25,
+          status: 'matched',
+          user1_id: actualUser.id,
+          user2_id: 'partner-user-789',
+          jitsi_room_name: 'tandemup_session_3',
+          user1_joined: false,
+          user2_joined: false,
+          created_at: new Date(now.getTime() - 10 * 60 * 1000).toISOString(),
+          updated_at: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+          user1: { id: actualUser.id, first_name: 'Jan', avatar_url: null },
+          user2: { id: 'partner-user-789', first_name: 'Mike', avatar_url: null }
         }];
         
         // Use mock sessions instead of database result
@@ -121,9 +140,7 @@ export async function GET(request: NextRequest) {
           const partner = isUser1 ? session.user2 : session.user1;
           const canCancel = session.status === 'waiting' || 
                            (session.status === 'matched' && new Date(session.start_time) > new Date(Date.now() + 60 * 60 * 1000));
-          const canJoin = session.status === 'matched' && 
-                         new Date(session.start_time) <= new Date(Date.now() + 5 * 60 * 1000) &&
-                         new Date(session.start_time) > new Date(Date.now() - 5 * 60 * 1000);
+          const canJoin = session.status === 'matched'; // Always allow joining for matched sessions
 
           return {
             id: session.id,
@@ -167,9 +184,7 @@ export async function GET(request: NextRequest) {
       const partner = isUser1 ? session.user2 : session.user1;
       const canCancel = session.status === 'waiting' || 
                        (session.status === 'matched' && new Date(session.start_time) > new Date(Date.now() + 60 * 60 * 1000));
-      const canJoin = session.status === 'matched' && 
-                     new Date(session.start_time) <= new Date(Date.now() + 5 * 60 * 1000) &&
-                     new Date(session.start_time) > new Date(Date.now() - 5 * 60 * 1000);
+      const canJoin = session.status === 'matched'; // Allow joining any matched session for testing
 
       return {
         id: session.id,
