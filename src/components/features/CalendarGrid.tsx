@@ -27,61 +27,33 @@ export function CalendarGrid({
     setLoading(true);
     
     try {
-      // Generate basic time slots
-      const slots = generateTimeSlots(selectedDate);
-      
-      // TODO: Fetch real data from API to determine slot status
-      // For now, we'll simulate some data
-      const timeSlotsWithStatus: TimeSlot[] = slots.map((slot, index) => {
-        const now = new Date();
-        const slotDateTime = new Date(slot.datetime);
-        
-        // Don't allow booking in the past
-        if (slotDateTime <= now) {
-          return {
-            ...slot,
-            date: selectedDate.toISOString().split('T')[0],
-            available: false,
-            status: 'unavailable',
-          };
-        }
-        
-        // Simulate some slots with waiting users (every 7th slot)
-        if (index % 7 === 0 && Math.random() > 0.6) {
-          return {
-            ...slot,
-            date: selectedDate.toISOString().split('T')[0],
-            available: true,
-            status: 'waiting',
-            waitingUser: {
-              firstName: ['Alice', 'Bob', 'Carol', 'David', 'Eva'][Math.floor(Math.random() * 5)],
-              duration: Math.random() > 0.5 ? 25 : 50,
-            },
-          };
-        }
-        
-        // Make some slots unavailable (simulate existing bookings)
-        if (Math.random() > 0.8) {
-          return {
-            ...slot,
-            date: selectedDate.toISOString().split('T')[0],
-            available: false,
-            status: 'unavailable',
-          };
-        }
-        
-        // Default available slots
-        return {
-          ...slot,
-          date: selectedDate.toISOString().split('T')[0],
-          available: true,
-          status: 'available',
-        };
+      // Fetch available slots from API
+      const response = await fetch(`/api/sessions/available?date=${selectedDate.toISOString().split('T')[0]}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-      
-      setTimeSlots(timeSlotsWithStatus);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch available slots');
+      }
+
+      const result = await response.json();
+      setTimeSlots(result.data || []);
     } catch (error) {
-      console.error('Error generating time slots:', error);
+      console.error('Error fetching time slots:', error);
+      
+      // Fallback to basic time slots if API fails
+      const slots = generateTimeSlots(selectedDate);
+      const basicSlots: TimeSlot[] = slots.map(slot => ({
+        ...slot,
+        date: selectedDate.toISOString().split('T')[0],
+        available: false,
+        status: 'unavailable',
+      }));
+      
+      setTimeSlots(basicSlots);
     } finally {
       setLoading(false);
     }
@@ -172,8 +144,8 @@ export function CalendarGrid({
             className={getSlotClassName(slot)}
             disabled={!slot.available}
             title={
-              slot.status === 'waiting'
-                ? `Join ${slot.waitingUser?.firstName}'s ${slot.waitingUser?.duration}min session`
+              slot.status === 'waiting' && slot.waitingUser
+                ? `Join ${slot.waitingUser.firstName}'s ${slot.waitingUser.duration}min session`
                 : slot.status === 'unavailable'
                 ? 'This time slot is not available'
                 : 'Book this time slot'

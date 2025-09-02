@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { LANGUAGES, TIMEZONE_OPTIONS } from '@/lib/constants';
@@ -9,10 +9,11 @@ import {
   Mail, 
   Globe, 
   Clock, 
-  Camera,
   AlertCircle,
   CheckCircle,
-  Save
+  Save,
+  Upload,
+  Trash2
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -25,7 +26,11 @@ export default function ProfilePage() {
   });
   
   const [updating, setUpdating] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (loading) {
     return (
@@ -57,9 +62,125 @@ export default function ProfilePage() {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
       }
     } catch (err) {
+      console.error('Profile update error:', err);
       setMessage({ type: 'error', text: 'Failed to update profile' });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('/api/auth/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to upload avatar');
+      }
+
+      // Refresh profile data to get new avatar URL
+      window.location.reload(); // Simple way to refresh - could be improved with state management
+      
+      setMessage({ type: 'success', text: 'Avatar updated successfully!' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';
+      setMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setUploadingAvatar(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/auth/avatar', {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to remove avatar');
+      }
+
+      // Refresh profile data
+      window.location.reload();
+      
+      setMessage({ type: 'success', text: 'Avatar removed successfully!' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove avatar';
+      setMessage({ type: 'error', text: errorMessage });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) return;
+
+    try {
+      const { error } = await (await import('@/lib/supabase/client')).supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) throw error;
+
+      setMessage({ type: 'success', text: 'Password reset email sent! Check your inbox.' });
+      setShowPasswordModal(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send password reset email';
+      setMessage({ type: 'error', text: errorMessage });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    // This would typically involve calling an API that handles user deletion
+    // For now, we'll just show a message
+    setMessage({ 
+      type: 'error', 
+      text: 'Account deletion is not yet implemented. Please contact support.' 
+    });
+    setShowDeleteModal(false);
+  };
+
+  const handleBillingPortal = async () => {
+    try {
+      const response = await fetch('/api/payments/customer-portal', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        window.open(url, '_blank');
+      } else {
+        throw new Error('Failed to open billing portal');
+      }
+    } catch (err) {
+      console.error('Billing portal error:', err);
+      setMessage({ type: 'error', text: 'Failed to open billing portal' });
     }
   };
 
@@ -106,10 +227,39 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                <button className="btn btn-outline btn-sm mt-4">
-                  <Camera className="w-4 h-4" />
-                  Change Photo
-                </button>
+                <div className="flex gap-2 mt-4">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleAvatarUpload}
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                  />
+                  
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={uploadingAvatar}
+                    className="btn btn-primary btn-sm"
+                  >
+                    {uploadingAvatar ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    Upload Photo
+                  </button>
+                  
+                  {profile?.avatar_url && (
+                    <button
+                      onClick={handleAvatarRemove}
+                      disabled={uploadingAvatar}
+                      className="btn btn-outline btn-error btn-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -285,7 +435,10 @@ export default function ProfilePage() {
                         Change your account password
                       </p>
                     </div>
-                    <button className="btn btn-outline btn-sm">
+                    <button 
+                      onClick={() => setShowPasswordModal(true)}
+                      className="btn btn-outline btn-sm"
+                    >
                       Change Password
                     </button>
                   </div>
@@ -299,7 +452,10 @@ export default function ProfilePage() {
                         Manage your billing and subscription
                       </p>
                     </div>
-                    <button className="btn btn-outline btn-sm">
+                    <button 
+                      onClick={handleBillingPortal}
+                      className="btn btn-outline btn-sm"
+                    >
                       Manage Billing
                     </button>
                   </div>
@@ -313,7 +469,10 @@ export default function ProfilePage() {
                         Permanently delete your account and data
                       </p>
                     </div>
-                    <button className="btn btn-outline btn-error btn-sm">
+                    <button 
+                      onClick={() => setShowDeleteModal(true)}
+                      className="btn btn-outline btn-error btn-sm"
+                    >
                       Delete Account
                     </button>
                   </div>
@@ -323,6 +482,65 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showPasswordModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4">Reset Password</h3>
+            <p className="mb-4">
+              We&apos;ll send a password reset link to your email address: 
+              <span className="font-semibold ml-1">{user?.email}</span>
+            </p>
+            <div className="modal-action">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="btn btn-ghost"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordReset}
+                className="btn btn-primary"
+              >
+                Send Reset Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-error mb-4">Delete Account</h3>
+            <div className="space-y-4">
+              <p>Are you sure you want to permanently delete your account?</p>
+              <div className="alert alert-warning">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">
+                  This action cannot be undone. All your data will be permanently removed.
+                </span>
+              </div>
+            </div>
+            <div className="modal-action">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="btn btn-ghost"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="btn btn-error"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

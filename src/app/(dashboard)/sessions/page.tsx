@@ -38,70 +38,31 @@ export default function MySessionsPage() {
     setLoadingSessions(true);
     
     try {
-      // TODO: Replace with actual API calls
-      // Simulate loading data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/sessions/my-sessions', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load sessions');
+      }
+
+      const result = await response.json();
       
-      // Mock upcoming sessions
-      const mockUpcoming: SessionDetails[] = [
-        {
-          id: '1',
-          startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-          duration: 25,
-          status: 'matched',
-          partner: {
-            id: 'partner1',
-            firstName: 'Alice',
-            avatarUrl: undefined,
-          },
-          jitsiRoomName: 'tandemup_session_1',
-          canCancel: true,
-          canJoin: false,
-        },
-        {
-          id: '2',
-          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-          duration: 50,
-          status: 'waiting',
-          canCancel: true,
-          canJoin: false,
-        },
-      ];
-
-      // Mock past sessions
-      const mockPast: SessionDetails[] = [
-        {
-          id: '3',
-          startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-          duration: 25,
-          status: 'completed',
-          partner: {
-            id: 'partner2',
-            firstName: 'Bob',
-            avatarUrl: undefined,
-          },
-          canCancel: false,
-          canJoin: false,
-        },
-        {
-          id: '4',
-          startTime: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), // 2 days ago
-          duration: 50,
-          status: 'no_show',
-          partner: {
-            id: 'partner3',
-            firstName: 'Carol',
-            avatarUrl: undefined,
-          },
-          canCancel: false,
-          canJoin: false,
-        },
-      ];
-
-      setUpcomingSessions(mockUpcoming);
-      setPastSessions(mockPast);
+      if (result.data) {
+        const upcoming = result.data.upcoming || [];
+        const past = result.data.past || [];
+        
+        setUpcomingSessions(upcoming);
+        setPastSessions(past);
+      }
     } catch (error) {
       console.error('Error loading sessions:', error);
+      // Keep empty arrays on error - user will see empty state
+      setUpcomingSessions([]);
+      setPastSessions([]);
     } finally {
       setLoadingSessions(false);
     }
@@ -109,13 +70,24 @@ export default function MySessionsPage() {
 
   const handleCancelSession = async (sessionId: string) => {
     try {
-      // TODO: Implement cancel session API call
-      console.log('Cancelling session:', sessionId);
+      const response = await fetch('/api/sessions/cancel', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to cancel session');
+      }
       
       // Remove from upcoming sessions
       setUpcomingSessions(prev => prev.filter(s => s.id !== sessionId));
     } catch (error) {
       console.error('Error cancelling session:', error);
+      // Show error to user - you might want to add a toast notification here
     }
   };
 

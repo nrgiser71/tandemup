@@ -40,23 +40,36 @@ export function BookingModal({
     setError(null);
 
     try {
-      // TODO: Call API to book the session
       const bookingData = {
         datetime: slot.datetime,
         duration: isJoiningExisting ? waitingUser!.duration : selectedDuration,
         action: isJoiningExisting ? 'join' : 'create',
-        sessionId: isJoiningExisting ? 'existing-session-id' : undefined,
+        sessionId: isJoiningExisting ? slot.sessionId : undefined,
       };
 
-      console.log('Booking session:', bookingData);
+      const response = await fetch('/api/sessions/book', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await response.json();
 
-      // Simulate success
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to book session');
+      }
+
+      // Show success message briefly before closing
+      setError(null);
+      
+      // Wait a moment to show success, then complete
+      await new Promise(resolve => setTimeout(resolve, 500));
       onComplete();
     } catch (err) {
-      setError('Failed to book session. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to book session. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

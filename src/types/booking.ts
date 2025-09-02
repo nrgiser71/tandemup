@@ -6,6 +6,7 @@ export interface TimeSlot {
   datetime: string;
   available: boolean;
   status: 'available' | 'waiting' | 'matched' | 'unavailable';
+  sessionId?: string;
   waitingUser?: {
     firstName: string;
     duration: 25 | 50;

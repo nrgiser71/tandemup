@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -14,9 +15,57 @@ import {
   CheckCircle 
 } from 'lucide-react';
 
+interface UserStats {
+  totalSessions: number;
+  totalFocusMinutes: number;
+  currentStreak: number;
+  uniquePartners: number;
+}
+
 export default function DashboardPage() {
   const { user, profile, loading } = useAuth();
   const { subscriptionInfo, getTrialDaysRemaining } = useSubscription();
+  
+  const [stats, setStats] = useState<UserStats>({
+    totalSessions: 0,
+    totalFocusMinutes: 0,
+    currentStreak: 0,
+    uniquePartners: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    if (user && profile) {
+      loadUserStats();
+    }
+  }, [user, profile]);
+
+  const loadUserStats = async () => {
+    setLoadingStats(true);
+    
+    try {
+      const response = await fetch('/api/auth/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setStats(result.data || {
+          totalSessions: 0,
+          totalFocusMinutes: 0,
+          currentStreak: 0,
+          uniquePartners: 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -110,7 +159,13 @@ export default function DashboardPage() {
               <CheckCircle className="w-8 h-8" />
             </div>
             <div className="stat-title">Sessions Completed</div>
-            <div className="stat-value text-primary">{profile?.total_sessions || 0}</div>
+            <div className="stat-value text-primary">
+              {loadingStats ? (
+                <span className="loading loading-spinner loading-md"></span>
+              ) : (
+                stats.totalSessions
+              )}
+            </div>
             <div className="stat-desc">All time</div>
           </div>
 
@@ -120,7 +175,11 @@ export default function DashboardPage() {
             </div>
             <div className="stat-title">Focus Time</div>
             <div className="stat-value text-secondary">
-              {Math.round((profile?.total_sessions || 0) * 37.5)}m
+              {loadingStats ? (
+                <span className="loading loading-spinner loading-md"></span>
+              ) : (
+                `${stats.totalFocusMinutes}m`
+              )}
             </div>
             <div className="stat-desc">Total focused minutes</div>
           </div>
@@ -130,7 +189,13 @@ export default function DashboardPage() {
               <TrendingUp className="w-8 h-8" />
             </div>
             <div className="stat-title">Streak</div>
-            <div className="stat-value text-accent">7</div>
+            <div className="stat-value text-accent">
+              {loadingStats ? (
+                <span className="loading loading-spinner loading-md"></span>
+              ) : (
+                stats.currentStreak
+              )}
+            </div>
             <div className="stat-desc">Days active</div>
           </div>
 
@@ -139,7 +204,13 @@ export default function DashboardPage() {
               <Users className="w-8 h-8" />
             </div>
             <div className="stat-title">Partners</div>
-            <div className="stat-value text-info">12</div>
+            <div className="stat-value text-info">
+              {loadingStats ? (
+                <span className="loading loading-spinner loading-md"></span>
+              ) : (
+                stats.uniquePartners
+              )}
+            </div>
             <div className="stat-desc">Unique partners</div>
           </div>
         </div>
