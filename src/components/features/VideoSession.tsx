@@ -78,7 +78,9 @@ export function VideoSession({
     }
 
     const script = document.createElement('script');
-    script.src = `https://${process.env.NEXT_PUBLIC_JITSI_DOMAIN}/external_api.js`;
+    const jitsiDomain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || 'meet.jit.si';
+    script.src = `https://${jitsiDomain}/external_api.js`;
+    console.log('Loading Jitsi from:', script.src);
     script.async = true;
     script.onload = () => setIsJitsiLoaded(true);
     script.onerror = () => setError('Failed to load video conference. Please refresh and try again.');
