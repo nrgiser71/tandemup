@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Profile query result:', { profile: profileData, profileError, userId: user.id });
 
-    let profile = profileData;
+    let profile: any = profileData;
     if (!profile) {
       console.log('No profile found for user, using demo mode with default profile');
       
