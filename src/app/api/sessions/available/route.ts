@@ -9,26 +9,15 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Try to get authorization header first
-    const authHeader = request.headers.get('authorization');
-    let user = null;
-    let authError = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const { data, error } = await supabase.auth.getUser(token);
-      user = data.user;
-      authError = error;
-    } else {
-      // Fallback to session-based auth
-      const { data, error } = await supabase.auth.getUser();
-      user = data.user;
-      authError = error;
-    }
+    // Get the user from the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - Please log in' },
         { status: 401 }
       );
     }
@@ -45,8 +34,13 @@ export async function GET(request: NextRequest) {
 
     const selectedDate = new Date(date);
     
-    // Validate date is not in the past
-    if (selectedDate < new Date()) {
+    // Validate date is not in the past (compare only dates, not time)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
       return NextResponse.json(
         { error: 'Cannot get slots for past dates' },
         { status: 400 }

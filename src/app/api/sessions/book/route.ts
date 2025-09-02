@@ -9,27 +9,16 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Try to get authorization header first
-    const authHeader = request.headers.get('authorization');
-    let user = null;
-    let authError = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const { data, error } = await supabase.auth.getUser(token);
-      user = data.user;
-      authError = error;
-    } else {
-      // Fallback to session-based auth
-      const { data, error } = await supabase.auth.getUser();
-      user = data.user;
-      authError = error;
-    }
+    // Get the user from the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       console.log('Auth error:', authError, 'User:', user);
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - Please log in' },
         { status: 401 }
       );
     }
@@ -146,7 +135,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Update the session to add the second user
-      const { data: updatedSession, error: updateError } = await (supabase as any)
+      const { data: updatedSession, error: updateError } = await supabase
         .from('sessions')
         .update({
           user2_id: user.id,
@@ -158,6 +147,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (updateError) {
+        console.error('Failed to join session:', updateError);
         return NextResponse.json(
           { error: 'Failed to join session' },
           { status: 400 }
@@ -165,11 +155,16 @@ export async function POST(request: NextRequest) {
       }
 
       // Log the booking action
-      await (supabase as any).from('bookings').insert({
+      const { error: bookingError } = await supabase.from('bookings').insert({
         user_id: user.id,
         session_id: sessionId,
         action: 'booked',
       });
+
+      if (bookingError) {
+        console.warn('Failed to log booking action:', bookingError);
+        // Don't fail the whole request for logging issues
+      }
 
       // TODO: Send match found emails to both users
 
@@ -229,11 +224,16 @@ export async function POST(request: NextRequest) {
 
         if (!matchError) {
           // Log the booking action
-          await (supabase as any).from('bookings').insert({
+          const { error: bookingError } = await supabase.from('bookings').insert({
             user_id: user.id,
             session_id: (matchingSession as any).id,
             action: 'booked',
           });
+
+          if (bookingError) {
+            console.warn('Failed to log booking action for instant match:', bookingError);
+            // Don't fail the whole request for logging issues
+          }
 
           // TODO: Send match found emails
 
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       console.log('Creating new session:', sessionData);
 
       // Insert session into database
-      const { data: newSession, error: createError } = await (supabase as any)
+      const { data: newSession, error: createError } = await supabase
         .from('sessions')
         .insert(sessionData)
         .select()
@@ -274,11 +274,16 @@ export async function POST(request: NextRequest) {
       }
 
       // Log the booking action
-      await (supabase as any).from('bookings').insert({
+      const { error: bookingError } = await supabase.from('bookings').insert({
         user_id: user.id,
         session_id: sessionData.id,
         action: 'booked',
       });
+
+      if (bookingError) {
+        console.warn('Failed to log booking action for new session:', bookingError);
+        // Don't fail the whole request for logging issues
+      }
 
       // TODO: Send booking confirmation email
 
