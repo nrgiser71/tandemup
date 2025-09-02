@@ -104,6 +104,15 @@ export function VideoSession({
         enableWelcomePage: false,
         startWithAudioMuted: false,
         startWithVideoMuted: false,
+        requireDisplayName: false,
+        enableUserRolesBasedOnToken: false,
+        enableLobby: false,
+        enableNoisyMicDetection: false,
+        p2p: { enabled: false },
+        channelLastN: -1,
+        startAudioOnly: false,
+        startScreenSharing: false,
+        openBridgeChannel: true,
         toolbarButtons: [
           'microphone',
           'camera', 
@@ -138,6 +147,12 @@ export function VideoSession({
       api.addEventListener('participantLeft', handleParticipantLeft);
       api.addEventListener('audioMuteStatusChanged', handleAudioMuteChanged);
       api.addEventListener('videoMuteStatusChanged', handleVideoMuteChanged);
+      api.addEventListener('readyToClose', () => {
+        console.log('Jitsi ready to close');
+      });
+      api.addEventListener('participantRoleChanged', () => {
+        console.log('Participant role changed');
+      });
 
       // Mount to container
       if (jitsiContainerRef.current) {
@@ -256,14 +271,19 @@ export function VideoSession({
 
   return (
     <div className="min-h-screen bg-black text-white relative">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent">
+      {/* Header - Enhanced */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
         <div className="flex items-center justify-between p-4">
+          {/* TandemUp Logo/Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">T</span>
+            </div>
+            <span className="text-white font-semibold text-lg">TandemUp</span>
+          </div>
+          
+          {/* Session Info */}
           <div className="flex items-center gap-4">
-            <PhaseIndicator 
-              phase={sessionPhase}
-              duration={session.duration}
-            />
             {sessionStarted && (
               <SessionTimer
                 phase={sessionPhase}
@@ -271,39 +291,76 @@ export function VideoSession({
                 duration={session.duration}
               />
             )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full">
-              <Users className="w-4 h-4" />
-              <span className="text-sm">{participants.length}</span>
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-full backdrop-blur-sm">
+              <Users className="w-4 h-4 text-white" />
+              <span className="text-sm text-white font-medium">{participants.length}</span>
             </div>
           </div>
         </div>
         
-        <div className="px-4 pb-4">
-          <p className="text-center text-sm opacity-75">
-            {getPhaseMessage()}
-          </p>
+        {/* Phase Indicator - More Prominent */}
+        <div className="px-4 pb-6">
+          <div className="flex flex-col items-center gap-3">
+            <PhaseIndicator 
+              phase={sessionPhase}
+              duration={session.duration}
+            />
+            <p className="text-center text-sm text-white/90 font-medium">
+              {getPhaseMessage()}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Jitsi Container */}
       <div 
         ref={jitsiContainerRef}
-        className="w-full h-full"
-        style={{ minHeight: '100vh' }}
+        className="absolute inset-0 w-full h-full"
+        style={{ 
+          width: '100%', 
+          height: '100vh',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 1
+        }}
       />
 
-      {/* Loading State */}
-      {!isJoined && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/90">
-          <div className="text-center">
-            <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
-            <p className="text-lg">Connecting to video session...</p>
-            <p className="text-sm opacity-75 mt-2">
-              Make sure your camera and microphone are ready
-            </p>
+      {/* Loading State - Full screen until connected */}
+      {!isJoined && isJitsiLoaded && (
+        <div className="absolute inset-0 z-30 bg-black/95 backdrop-blur-md flex items-center justify-center">
+          <div className="text-center max-w-md px-6">
+            <div className="loading loading-spinner loading-lg text-primary mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-white mb-4">Connecting to Session</h2>
+            <p className="text-white/80 mb-6">Setting up your video conference...</p>
+            <div className="bg-white/10 rounded-lg p-4 text-left">
+              <p className="text-sm text-white/70 mb-2">Next steps:</p>
+              <ul className="text-sm text-white/90 space-y-1">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  Click "Join Meeting" when prompted
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+                  Allow camera and microphone access
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+                  Your session will begin automatically
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Jitsi Loading State */}
+      {!isJitsiLoaded && (
+        <div className="absolute inset-0 z-30 bg-black flex items-center justify-center">
+          <div className="text-center max-w-md px-6">
+            <div className="loading loading-spinner loading-lg text-primary mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-white mb-4">Loading Video Conference</h2>
+            <p className="text-white/80">Preparing your TandemUp session...</p>
           </div>
         </div>
       )}

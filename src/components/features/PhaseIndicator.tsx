@@ -68,7 +68,7 @@ export function PhaseIndicator({ phase, duration }: PhaseIndicatorProps) {
   }
 
   return (
-    <div className="flex items-center gap-1 bg-black/50 px-3 py-2 rounded-lg">
+    <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-4 py-3 rounded-xl border border-white/10">
       {phases.map((phaseItem, index) => {
         const Icon = phaseItem.icon;
         const isActive = index === currentIndex;
@@ -80,21 +80,32 @@ export function PhaseIndicator({ phase, duration }: PhaseIndicatorProps) {
             className="flex items-center"
           >
             <div
-              className={`flex items-center gap-2 px-2 py-1 rounded transition-all ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
                 isActive
-                  ? `${phaseItem.color} bg-white/10 font-semibold`
+                  ? `${phaseItem.color} bg-white/15 font-semibold shadow-lg ring-1 ring-white/20`
                   : isCompleted
-                  ? 'text-white/60 font-medium'
-                  : 'text-white/40'
+                  ? 'text-white/70 font-medium bg-white/5'
+                  : 'text-white/50 bg-transparent hover:bg-white/5'
               }`}
               title={phaseItem.description}
             >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{phaseItem.label}</span>
+              <Icon className={`w-5 h-5 ${
+                isActive ? 'animate-pulse' : ''
+              }`} />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{phaseItem.label}</span>
+                {isActive && (
+                  <span className="text-xs opacity-80">
+                    {phaseItem.description.split(' - ')[1]}
+                  </span>
+                )}
+              </div>
             </div>
             
             {index < phases.length - 1 && (
-              <div className="mx-1 w-2 h-0.5 bg-white/20 rounded" />
+              <div className={`mx-2 w-4 h-0.5 rounded transition-all duration-300 ${
+                isCompleted ? 'bg-white/40' : 'bg-white/20'
+              }`} />
             )}
           </div>
         );

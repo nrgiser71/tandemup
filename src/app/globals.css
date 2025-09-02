@@ -155,3 +155,54 @@ html {
 * {
   box-sizing: border-box;
 }
+
+/* Dynamic color classes for SessionTimer and PhaseIndicator */
+.bg-primary\/20 { background-color: rgb(99 102 241 / 0.2); }
+.bg-success\/20 { background-color: rgb(34 197 94 / 0.2); }
+.bg-warning\/20 { background-color: rgb(245 158 11 / 0.2); }
+.text-primary { color: rgb(99 102 241); }
+.text-success { color: rgb(34 197 94); }
+.text-warning { color: rgb(245 158 11); }
+.text-neutral { color: rgb(55 65 81); }
+
+/* Progress bar gradients */
+.bg-gradient-to-r.from-primary\/80.to-primary {
+  background-image: linear-gradient(to right, rgb(99 102 241 / 0.8), rgb(99 102 241));
+}
+.bg-gradient-to-r.from-success\/80.to-success {
+  background-image: linear-gradient(to right, rgb(34 197 94 / 0.8), rgb(34 197 94));
+}
+.bg-gradient-to-r.from-warning\/80.to-warning {
+  background-image: linear-gradient(to right, rgb(245 158 11 / 0.8), rgb(245 158 11));
+}
+.bg-gradient-to-r.from-neutral\/80.to-neutral {
+  background-image: linear-gradient(to right, rgb(55 65 81 / 0.8), rgb(55 65 81));
+}
+
+/* Video session specific styles */
+.video-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Jitsi integration improvements */
+#jitsi-container iframe {
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+/* Loading animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}

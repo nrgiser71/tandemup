@@ -65,7 +65,7 @@ export default function SessionPage() {
       // For now, use mock data
       const mockSession: SessionDetails = {
         id: sessionId,
-        startTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
+        startTime: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago (can join now)
         duration: 25,
         status: 'matched',
         partner: {
@@ -89,10 +89,14 @@ export default function SessionPage() {
 
   if (loading || loadingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-lg font-medium">Loading session...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading Session</h2>
+          <p className="text-gray-600 mb-4">Preparing your TandemUp experience...</p>
+          <div className="w-48 h-1 bg-gray-200 rounded-full mx-auto overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-primary to-accent animate-pulse rounded-full" style={{width: '60%'}}></div>
+          </div>
         </div>
       </div>
     );
@@ -132,23 +136,50 @@ export default function SessionPage() {
     return null;
   }
 
-  // Mobile device restriction
+  // Mobile device restriction - Enhanced UI
   if (isMobile) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="card bg-base-100 shadow-lg max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+        <div className="card bg-white shadow-2xl max-w-md border border-gray-100">
           <div className="card-body text-center">
-            <Monitor className="w-16 h-16 text-warning mx-auto mb-4" />
-            <h2 className="card-title justify-center">Desktop Required</h2>
-            <p className="text-base-content/70 mb-4">
-              Video sessions work best on desktop devices for optimal camera positioning and focus.
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-base-content/60 mb-6">
-              <Smartphone className="w-4 h-4" />
-              <span>Mobile detected</span>
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-warning/20 to-warning/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Monitor className="w-10 h-10 text-warning" />
+              </div>
+              <h2 className="card-title justify-center text-2xl font-bold text-gray-800 mb-2">
+                Desktop Required
+              </h2>
+              <p className="text-gray-600 mb-4">
+                TandemUp video sessions require a desktop or laptop computer for the best experience.
+              </p>
             </div>
-            <div className="text-sm text-base-content/60">
-              Please access TandemUp from a desktop computer to join your session.
+            
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-center gap-2 text-sm text-orange-700 mb-2">
+                <Smartphone className="w-4 h-4" />
+                <span className="font-medium">Mobile device detected</span>
+              </div>
+              <p className="text-xs text-orange-600">
+                Camera positioning and focus accountability work best on larger screens
+              </p>
+            </div>
+            
+            <div className="text-sm text-gray-500 space-y-2">
+              <p>Please access TandemUp from:</p>
+              <ul className="text-left space-y-1 max-w-xs mx-auto">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  Desktop computer
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  Laptop with webcam
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                  Chrome or Firefox browser
+                </li>
+              </ul>
             </div>
           </div>
         </div>

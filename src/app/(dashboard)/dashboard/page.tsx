@@ -5,14 +5,19 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { AppLayout } from '@/components/layouts/AppLayout';
+import { SessionDetails } from '@/types';
 import { ROUTES } from '@/lib/constants';
+import { formatDateTime, getTimeUntil } from '@/lib/utils';
 import { 
   Calendar, 
   Clock, 
   Users, 
   Plus,
   TrendingUp,
-  CheckCircle 
+  CheckCircle,
+  Video,
+  User,
+  AlertTriangle
 } from 'lucide-react';
 
 interface UserStats {
@@ -33,10 +38,13 @@ export default function DashboardPage() {
     uniquePartners: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [upcomingSessions, setUpcomingSessions] = useState<SessionDetails[]>([]);
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
 
   useEffect(() => {
     if (user && profile) {
       loadUserStats();
+      loadUpcomingSessions();
     }
   }, [user, profile]);
 
@@ -66,6 +74,103 @@ export default function DashboardPage() {
     } finally {
       setLoadingStats(false);
     }
+  };
+
+  const loadUpcomingSessions = async () => {
+    setLoadingUpcoming(true);
+    
+    try {
+      // Import supabase singleton client to get session token
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if we have a session
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      
+      const response = await fetch('/api/sessions/my-sessions', {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load sessions');
+      }
+
+      const result = await response.json();
+      
+      if (result.data) {
+        const upcoming = result.data.upcoming || [];
+        setUpcomingSessions(upcoming);
+      }
+    } catch (error) {
+      console.error('Error loading upcoming sessions:', error);
+      setUpcomingSessions([]);
+    } finally {
+      setLoadingUpcoming(false);
+    }
+  };
+
+  const handleCancelSession = async (sessionId: string) => {
+    try {
+      // Import supabase singleton client to get session token
+      const { supabase } = await import('@/lib/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add Authorization header if we have a session
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      
+      const response = await fetch(`/api/sessions/${sessionId}/cancel`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Reload sessions after cancellation
+        loadUpcomingSessions();
+      } else {
+        console.error('Failed to cancel session');
+      }
+    } catch (error) {
+      console.error('Error canceling session:', error);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'matched':
+        return <div className="badge badge-success">Matched</div>;
+      case 'waiting':
+        return <div className="badge badge-warning">Waiting</div>;
+      case 'completed':
+        return <div className="badge badge-success">Completed</div>;
+      case 'cancelled':
+        return <div className="badge badge-error">Cancelled</div>;
+      case 'no_show':
+        return <div className="badge badge-error">No Show</div>;
+      default:
+        return <div className="badge badge-neutral">{status}</div>;
+    }
+  };
+
+  const canJoinSession = (session: SessionDetails) => {
+    if (session.status !== 'matched') return false;
+    
+    const timeUntil = getTimeUntil(session.startTime);
+    return timeUntil && timeUntil.totalMinutes <= 5; // Can join 5 minutes before
   };
 
   if (loading) {
@@ -237,16 +342,118 @@ export default function DashboardPage() {
         {/* Upcoming Sessions */}
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
-            <h2 className="card-title">Upcoming Sessions</h2>
-            
-            <div className="text-center py-12 text-base-content/60">
-              <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">No upcoming sessions</p>
-              <p className="mb-4">Book your first session to get started!</p>
-              <Link href={ROUTES.BOOK_SESSION} className="btn btn-primary">
-                Book Session
-              </Link>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="card-title">Upcoming Sessions</h2>
+              {upcomingSessions.length > 0 && (
+                <Link href={ROUTES.MY_SESSIONS} className="btn btn-sm btn-ghost">
+                  View All
+                </Link>
+              )}
             </div>
+            
+            {loadingUpcoming ? (
+              <div className="text-center py-12">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+            ) : upcomingSessions.length === 0 ? (
+              <div className="text-center py-12 text-base-content/60">
+                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg mb-2">No upcoming sessions</p>
+                <p className="mb-4">Book your first session to get started!</p>
+                <Link href={ROUTES.BOOK_SESSION} className="btn btn-primary">
+                  Book Session
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {upcomingSessions.slice(0, 3).map((session) => (
+                  <div key={session.id} className="border border-base-300 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-3">
+                        {/* Session Info */}
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-primary" />
+                            <span className="font-medium text-sm">
+                              {formatDateTime(session.startTime)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-secondary" />
+                            <span className="text-sm">{session.duration} minutes</span>
+                          </div>
+                          
+                          {getStatusBadge(session.status)}
+                        </div>
+
+                        {/* Partner Info */}
+                        {session.partner ? (
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-accent" />
+                            <span className="text-sm">Partner: {session.partner.firstName}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-warning">
+                            <User className="w-4 h-4" />
+                            <span className="text-sm">Waiting for partner...</span>
+                          </div>
+                        )}
+
+                        {/* Time Until Session */}
+                        {(() => {
+                          const timeUntil = getTimeUntil(session.startTime);
+                          if (!timeUntil) return null;
+                          
+                          return (
+                            <div className="text-sm text-base-content/60">
+                              {timeUntil.totalMinutes < 60
+                                ? `Starts in ${timeUntil.totalMinutes} minutes`
+                                : `Starts in ${timeUntil.hours}h ${timeUntil.minutes}m`
+                              }
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        {canJoinSession(session) && (
+                          <Link
+                            href={`${ROUTES.SESSION_ROOM}/${session.id}`}
+                            className="btn btn-primary btn-sm"
+                          >
+                            <Video className="w-4 h-4" />
+                            Join
+                          </Link>
+                        )}
+                        
+                        {session.canCancel && (
+                          <button
+                            onClick={() => {
+                              if (confirm('Are you sure you want to cancel this session?')) {
+                                handleCancelSession(session.id);
+                              }
+                            }}
+                            className="btn btn-error btn-sm btn-outline"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {upcomingSessions.length > 3 && (
+                  <div className="text-center pt-4">
+                    <Link href={ROUTES.MY_SESSIONS} className="btn btn-ghost btn-sm">
+                      View {upcomingSessions.length - 3} more sessions
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

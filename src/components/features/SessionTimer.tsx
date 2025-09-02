@@ -67,19 +67,37 @@ export function SessionTimer({ phase, sessionStart, duration }: SessionTimerProp
   };
 
   const getProgressColor = () => {
-    const progress = (totalPhaseTime - timeRemaining) / totalPhaseTime;
-    
     switch (phase) {
       case 'checkin':
-        return 'primary';
+        return {
+          bg: 'bg-primary/20',
+          text: 'text-primary',
+          gradient: 'from-primary/80 to-primary'
+        };
       case 'focus':
-        return 'success';
+        return {
+          bg: 'bg-success/20',
+          text: 'text-success',
+          gradient: 'from-success/80 to-success'
+        };
       case 'checkout':
-        return 'warning';
+        return {
+          bg: 'bg-warning/20',
+          text: 'text-warning',
+          gradient: 'from-warning/80 to-warning'
+        };
       case 'ended':
-        return 'success';
+        return {
+          bg: 'bg-success/20',
+          text: 'text-success',
+          gradient: 'from-success/80 to-success'
+        };
       default:
-        return 'neutral';
+        return {
+          bg: 'bg-neutral/20',
+          text: 'text-neutral',
+          gradient: 'from-neutral/80 to-neutral'
+        };
     }
   };
 
@@ -89,20 +107,36 @@ export function SessionTimer({ phase, sessionStart, duration }: SessionTimerProp
     return null;
   }
 
+  const colors = getProgressColor();
+  
   return (
-    <div className="flex items-center gap-3 bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
-      <Clock className="w-5 h-5" />
+    <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-3 rounded-xl border border-white/10 fade-in-up">
+      <div className={`p-2 rounded-lg ${colors.bg}`}>
+        <Clock className={`w-5 h-5 ${colors.text}`} />
+      </div>
       
-      <div className="flex flex-col gap-1">
-        <div className="text-lg font-mono font-bold">
+      <div className="flex flex-col gap-2">
+        <div className="text-xl font-mono font-bold text-white tracking-wider">
           {formatTime(timeRemaining)}
         </div>
         
-        <div className="w-24 h-1 bg-white/20 rounded-full overflow-hidden">
+        <div className="w-28 h-2 bg-white/20 rounded-full overflow-hidden relative">
           <div 
-            className={`h-full bg-${getProgressColor()} transition-all duration-1000`}
+            className={`h-full bg-gradient-to-r ${colors.gradient} transition-all duration-1000 rounded-full relative`}
             style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+          >
+            <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+          </div>
+          
+          {/* Progress indicator dot */}
+          <div 
+            className={`absolute top-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full transition-all duration-1000`}
+            style={{ left: `${Math.max(0, Math.min(100, progress))}%`, transform: 'translateX(-50%) translateY(-50%)' }}
           />
+        </div>
+        
+        <div className="text-xs text-white/70 font-medium capitalize">
+          {phase} phase
         </div>
       </div>
     </div>
