@@ -33,7 +33,7 @@ export function SessionControls({
           {sessionPhase === 'checkin' && (
             <span className="flex items-center gap-2">
               <span>💬</span>
-              Use this time to introduce yourselves and share what you'll focus on
+              Use this time to introduce yourselves and share what you&apos;ll focus on
             </span>
           )}
           {sessionPhase === 'focus' && (

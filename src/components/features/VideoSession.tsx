@@ -150,9 +150,6 @@ export function VideoSession({
       api.addEventListener('readyToClose', () => {
         console.log('Jitsi ready to close');
       });
-      api.addEventListener('participantRoleChanged', () => {
-        console.log('Participant role changed');
-      });
 
       // Mount to container
       if (jitsiContainerRef.current) {
@@ -338,7 +335,7 @@ export function VideoSession({
               <ul className="text-sm text-white/90 space-y-1">
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                  Click "Join Meeting" when prompted
+                  Click &quot;Join Meeting&quot; when prompted
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
