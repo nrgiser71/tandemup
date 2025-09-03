@@ -56,6 +56,23 @@ export function BookingModal({
         sessionId: isJoiningExisting ? slot.sessionId : undefined,
       };
 
+      console.log('BookingModal - Sending booking request:', {
+        isJoiningExisting,
+        slotDetails: {
+          datetime: slot.datetime,
+          time: slot.time,
+          status: slot.status,
+          sessionId: slot.sessionId,
+          waitingUser: slot.waitingUser
+        },
+        bookingData,
+        userProfile: {
+          id: userProfile.id,
+          firstName: userProfile.first_name,
+          language: userProfile.language
+        }
+      });
+
       const response = await fetch('/api/sessions/book', {
         method: 'POST',
         headers: {
@@ -68,8 +85,20 @@ export function BookingModal({
 
       const result = await response.json();
 
+      console.log('BookingModal - Server response:', {
+        status: response.status,
+        ok: response.ok,
+        result
+      });
+
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to book session');
+        const errorMessage = result.error || `Failed to book session (${response.status})`;
+        console.error('BookingModal - Booking failed:', {
+          status: response.status,
+          error: result.error,
+          fullResult: result
+        });
+        throw new Error(errorMessage);
       }
 
       // Show success message briefly before closing

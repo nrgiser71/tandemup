@@ -285,10 +285,16 @@ export async function GET(request: NextRequest) {
           }
           
           if (waitingUserProfile.language === profile.language) {
-            console.log(`DEBUG - Showing waiting session to user for slot ${slot.time}`);
+            console.log(`DEBUG - Showing waiting session to user for slot ${slot.time}`, {
+              sessionId: session.id,
+              originalSlotDatetime: slot.datetime,
+              sessionStartTime: (session as any).start_time,
+              waitingUser: waitingUserProfile.first_name
+            });
             return {
               ...slot,
               date: selectedDate.toISOString().split('T')[0],
+              datetime: (session as any).start_time, // Use the actual session start time
               available: true,
               status: 'waiting',
               waitingUser: {

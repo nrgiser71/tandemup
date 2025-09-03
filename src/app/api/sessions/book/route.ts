@@ -47,6 +47,14 @@ export async function POST(request: NextRequest) {
       body = await request.json();
       ({ datetime, duration, action, sessionId } = body);
       console.log('Request body parsed:', { datetime, duration, action, sessionId });
+      console.log('Book session - Request details:', {
+        datetime,
+        duration,
+        action,
+        sessionId,
+        userId: actualUser.id,
+        userEmail: actualUser.email
+      });
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return NextResponse.json(
@@ -56,8 +64,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!datetime || !duration || !action) {
+      console.error('Book session failed - missing required fields:', {
+        datetime: !!datetime,
+        duration: !!duration,
+        action: !!action,
+        receivedBody: body
+      });
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: `Missing required fields. datetime: ${!!datetime}, duration: ${!!duration}, action: ${!!action}` },
         { status: 400 }
       );
     }
@@ -65,9 +79,15 @@ export async function POST(request: NextRequest) {
     const startTime = new Date(datetime);
     
     // Validate start time is in the future
-    if (startTime <= new Date()) {
+    const currentTime = new Date();
+    if (startTime <= currentTime) {
+      console.log('Session booking failed - time in past:', {
+        requestedTime: startTime.toISOString(),
+        currentTime: currentTime.toISOString(),
+        action
+      });
       return NextResponse.json(
-        { error: 'Cannot book sessions in the past' },
+        { error: `Cannot book sessions in the past. Requested time: ${startTime.toLocaleString()}, Current time: ${currentTime.toLocaleString()}` },
         { status: 400 }
       );
     }
@@ -164,16 +184,26 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (sessionError || !existingSession) {
+        console.log('Join session failed - session not found:', {
+          sessionId,
+          sessionError: sessionError?.message,
+          existingSessionFound: !!existingSession
+        });
         return NextResponse.json(
-          { error: 'Session not found or no longer available' },
+          { error: `Session not found or no longer available. Session ID: ${sessionId}` },
           { status: 404 }
         );
       }
 
       // Check if user is trying to join their own session
       if ((existingSession as any).user1_id === actualUser.id) {
+        console.log('Join session failed - user trying to join own session:', {
+          sessionId,
+          userId: actualUser.id,
+          sessionUserId: (existingSession as any).user1_id
+        });
         return NextResponse.json(
-          { error: 'Cannot join your own session' },
+          { error: 'Cannot join your own session. Please wait for another user to join instead.' },
           { status: 400 }
         );
       }
