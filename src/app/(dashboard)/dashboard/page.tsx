@@ -167,8 +167,16 @@ export default function DashboardPage() {
   };
 
   const canJoinSession = (session: SessionDetails) => {
-    // Always allow joining for testing purposes
-    return session.status === 'matched';
+    if (session.status !== 'matched') return false;
+    
+    const now = new Date();
+    const sessionStart = new Date(session.startTime);
+    const sessionEnd = new Date(sessionStart.getTime() + session.duration * 60 * 1000);
+    
+    // Allow joining from 5 minutes before start until session ends
+    const fiveMinutesBeforeStart = new Date(sessionStart.getTime() - 5 * 60 * 1000);
+    
+    return now >= fiveMinutesBeforeStart && now < sessionEnd;
   };
 
   if (loading) {

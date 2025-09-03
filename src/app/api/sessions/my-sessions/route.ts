@@ -207,10 +207,16 @@ export async function GET(request: NextRequest) {
     // Separate into upcoming and past if type is 'all'
     if (type === 'all') {
       const upcoming = transformedSessions?.filter(
-        session => new Date(session.startTime) >= now
+        session => {
+          const sessionEnd = new Date(new Date(session.startTime).getTime() + session.duration * 60 * 1000);
+          return sessionEnd > now; // Session is upcoming if it hasn't ended yet
+        }
       ) || [];
       const past = transformedSessions?.filter(
-        session => new Date(session.startTime) < now
+        session => {
+          const sessionEnd = new Date(new Date(session.startTime).getTime() + session.duration * 60 * 1000);
+          return sessionEnd <= now; // Session is past only after it has ended
+        }
       ) || [];
 
       console.log('=== RESPONSE DEBUG ===');
