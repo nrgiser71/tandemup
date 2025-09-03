@@ -221,7 +221,10 @@ export async function GET(request: NextRequest) {
     // Process each time slot
     const processedSlots = basicSlots.map(slot => {
       const now = new Date();
-      const slotDateTime = new Date(slot.datetime);
+      // Construct proper datetime using selected date + slot time
+      const [hours, minutes] = slot.time.split(':');
+      const slotDateTime = new Date(selectedDate);
+      slotDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       
       // Don't allow booking in the past
       if (slotDateTime <= now) {
