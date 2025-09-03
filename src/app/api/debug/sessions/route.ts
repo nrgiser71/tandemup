@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       .select('id, first_name, last_name, language, email, created_at');
 
     // Analyze the matched sessions data
-    const analysis = matchedSessions?.map(session => {
+    const analysis = matchedSessions?.map((session: any) => {
       const isUser1 = session.user1_id === user.id;
       const partner = isUser1 ? session.user2 : session.user1;
       

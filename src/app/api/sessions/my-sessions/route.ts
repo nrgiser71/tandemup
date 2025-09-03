@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if we have partner profile data, if not, fetch manually due to RLS policies
-    const needsPartnerFetch = sessions?.some(session => 
+    const needsPartnerFetch = sessions?.some((session: any) => 
       session.status === 'matched' && 
       ((session.user1_id === user.id && !session.user2) || 
        (session.user2_id === user.id && !session.user1))
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       
       // Get unique partner IDs
       const partnerIds = new Set<string>();
-      sessions?.forEach(session => {
+      sessions?.forEach((session: any) => {
         if (session.status === 'matched') {
           const partnerId = session.user1_id === user.id ? session.user2_id : session.user1_id;
           if (partnerId) {
@@ -102,13 +102,13 @@ export async function GET(request: NextRequest) {
           .select('id, first_name, avatar_url, language')
           .in('id', Array.from(partnerIds));
         
-        profiles?.forEach(profile => {
+        profiles?.forEach((profile: any) => {
           partnerProfiles.set(profile.id, profile);
         });
       }
 
       // Manually attach partner profiles to sessions
-      sessions?.forEach(session => {
+      sessions?.forEach((session: any) => {
         if (session.status === 'matched') {
           const isUser1 = session.user1_id === user.id;
           const partnerId = isUser1 ? session.user2_id : session.user1_id;
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
     console.log('Raw sessions from DB:', JSON.stringify(sessions, null, 2));
     
     // Check for matched sessions specifically
-    const matchedSessions = sessions?.filter(s => s.status === 'matched');
+    const matchedSessions = sessions?.filter((s: any) => s.status === 'matched');
     if (matchedSessions && matchedSessions.length > 0) {
       console.log('=== MATCHED SESSIONS ANALYSIS ===');
       matchedSessions.forEach((session: any, index: number) => {
