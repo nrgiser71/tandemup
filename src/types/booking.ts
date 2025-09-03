@@ -29,6 +29,7 @@ export interface SessionDetails {
     id: string;
     firstName: string;
     avatarUrl?: string;
+    language?: string;
   };
   jitsiRoomName?: string;
   canCancel: boolean;

@@ -255,7 +255,7 @@ export default function MySessionsPage() {
                           session.partner ? (
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-accent" />
-                              <span>Matched with {session.partner.firstName}</span>
+                              <span>Matched with {session.partner.firstName} ({session.partner.language?.toUpperCase()})</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-success">
@@ -363,7 +363,7 @@ export default function MySessionsPage() {
                           session.partner ? (
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-accent" />
-                              <span>Partner: {session.partner.firstName}</span>
+                              <span>Partner: {session.partner.firstName} ({session.partner.language?.toUpperCase()})</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-success">

@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
         user2_joined,
         created_at,
         updated_at,
-        user1:profiles!sessions_user1_id_fkey(id, first_name, avatar_url),
-        user2:profiles!sessions_user2_id_fkey(id, first_name, avatar_url)
+        user1:profiles!sessions_user1_id_fkey(id, first_name, avatar_url, language),
+        user2:profiles!sessions_user2_id_fkey(id, first_name, avatar_url, language)
       `)
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
       .order('start_time', { ascending: type === 'upcoming' });
@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
           id: partner.id,
           firstName: partner.first_name,
           avatarUrl: partner.avatar_url,
+          language: partner.language,
         } : null,
         jitsiRoomName: session.jitsi_room_name,
         canCancel,

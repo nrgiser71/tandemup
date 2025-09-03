@@ -390,7 +390,7 @@ export default function DashboardPage() {
                           session.partner ? (
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-accent" />
-                              <span className="text-sm">Matched with {session.partner.firstName}</span>
+                              <span className="text-sm">Matched with {session.partner.firstName} ({session.partner.language?.toUpperCase()})</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-success">
