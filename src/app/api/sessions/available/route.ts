@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const date = searchParams.get('date');
+    const timezone = searchParams.get('timezone') || 'UTC';
     
     if (!date) {
       return NextResponse.json(
@@ -31,6 +32,8 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log('Available sessions API - Date:', date, 'Timezone:', timezone);
 
     const selectedDate = new Date(date);
     
@@ -196,10 +199,22 @@ export async function GET(request: NextRequest) {
       }))
     });
 
-    // Create a map of existing sessions by time slot
+    // Helper function to convert UTC time to user's timezone
+    const convertToUserTime = (utcTimeString: string): string => {
+      const utcDate = new Date(utcTimeString);
+      return utcDate.toLocaleTimeString('en-GB', {
+        timeZone: timezone,
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    // Create a map of existing sessions by time slot (using user's timezone)
     const sessionMap = new Map();
     sessionsWithProfiles?.forEach(session => {
-      const sessionTime = new Date((session as any).start_time).toTimeString().slice(0, 5);
+      const sessionTime = convertToUserTime((session as any).start_time);
+      console.log(`Session ${(session as any).id}: UTC ${(session as any).start_time} -> Local ${sessionTime}`);
       sessionMap.set(sessionTime, session);
     });
 

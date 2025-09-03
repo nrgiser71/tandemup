@@ -40,8 +40,11 @@ export function CalendarGrid({
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
       
+      // Get user's timezone
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
       // Fetch available slots from API
-      const response = await fetch(`/api/sessions/available?date=${selectedDate.toISOString().split('T')[0]}`, {
+      const response = await fetch(`/api/sessions/available?date=${selectedDate.toISOString().split('T')[0]}&timezone=${encodeURIComponent(userTimezone)}`, {
         method: 'GET',
         headers,
       });
