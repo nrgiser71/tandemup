@@ -169,7 +169,7 @@ export default function BookSessionPage() {
                       <span className="text-xs text-slate-600 dark:text-slate-400">Join instantly</span>
                     </div>
                     <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-2 py-1 rounded-full">
-                      JOIN!
+                      MATCH
                     </div>
                   </div>
 
@@ -206,7 +206,7 @@ export default function BookSessionPage() {
                 <div className="flex items-center justify-center mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
                   <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span>Green cards pulse when partners are ready - click to join instantly!</span>
+                    <span>Green cards pulse when partners are ready - click to match!</span>
                   </div>
                 </div>
               </div>

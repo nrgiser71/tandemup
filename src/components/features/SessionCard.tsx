@@ -169,7 +169,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
       return (
         <div className="absolute top-3 right-3 z-10">
           <div className="bg-white text-emerald-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm animate-bounce">
-            JOIN NOW!
+            MATCH
           </div>
         </div>
       );
@@ -188,7 +188,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
 
   const getTooltip = () => {
     if (slot.status === 'waiting' && slot.waitingUser) {
-      return `Join ${slot.waitingUser.firstName}'s ${slot.waitingUser.duration}min session at ${slot.time}`;
+      return `Match with ${slot.waitingUser.firstName} for ${slot.waitingUser.duration}min session at ${slot.time}`;
     }
     if (slot.status === 'unavailable') {
       return 'This time slot is not available';

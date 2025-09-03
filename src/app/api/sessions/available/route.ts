@@ -250,6 +250,16 @@ export async function GET(request: NextRequest) {
         
         // Check if it's a waiting session with matching language
         if (session.status === 'waiting') {
+          // Check if this waiting session has already passed its start time
+          if (slotDateTime <= now) {
+            return {
+              ...slot,
+              date: selectedDate.toISOString().split('T')[0],
+              available: false,
+              status: 'unavailable',
+            };
+          }
+          
           const waitingUserProfile = session.user1_profile || session.user2_profile;
           
           console.log(`DEBUG - Processing waiting session for slot ${slot.time}:`, {
