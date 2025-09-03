@@ -367,7 +367,7 @@ export function VideoSession({
         </div>
       )}
 
-      {/* Session Controls */}
+      {/* Session Controls - Temporarily hidden to show Jitsi native controls
       <SessionControls
         isJoined={isJoined}
         isMuted={isMuted}
@@ -381,6 +381,7 @@ export function VideoSession({
           }
         }}
       />
+      */}
 
       {/* Report Modal */}
       {showReportModal && (
