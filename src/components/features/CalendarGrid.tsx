@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { generateTimeSlots } from '@/lib/utils';
 import { TimeSlot } from '@/types';
-import { Clock, Users, Loader2, Plus, X, Calendar, UserCheck } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import { SessionCard } from './SessionCard';
 
 interface CalendarGridProps {
   selectedDate: Date;
@@ -77,99 +78,33 @@ export function CalendarGrid({
     }
   };
 
-  const getSlotClassName = (slot: TimeSlot) => {
-    const baseClasses = 'btn btn-sm h-14 flex-col gap-1 p-2 transition-all duration-300 relative';
-    
-    if (!slot.available || slot.status === 'unavailable') {
-      return `${baseClasses} btn-disabled bg-base-200 text-base-content/30 cursor-not-allowed opacity-50`;
-    }
-    
-    if (slot.status === 'waiting') {
-      return `${baseClasses} bg-success hover:bg-success-focus text-success-content font-semibold 
-              ring-2 ring-success ring-opacity-50 animate-pulse hover:animate-none hover:scale-105 
-              shadow-lg hover:shadow-xl cursor-pointer`;
-    }
-    
-    if (slot.status === 'matched') {
-      return `${baseClasses} bg-info hover:bg-info-focus text-info-content`;
-    }
-    
-    // Check if this is user's own session by looking at session data
-    // We'll add this logic when we have the user context
-    
-    // Default available
-    return `${baseClasses} bg-base-100 hover:bg-base-200 border-2 border-base-300 
-            hover:border-warning text-base-content hover:scale-105 cursor-pointer`;
-  };
-
-  const getSlotIcon = (slot: TimeSlot) => {
-    const iconSize = "w-5 h-5";
-    
-    if (slot.status === 'waiting') {
-      return (
-        <div className="relative">
-          <Users className={`${iconSize} text-success-content`} />
-          <div className="absolute -top-1 -right-1 bg-success-content text-success rounded-full w-3 h-3 flex items-center justify-center text-xs font-bold">
-            1
-          </div>
-        </div>
-      );
-    }
-    
-    if (slot.status === 'matched') {
-      return <UserCheck className={`${iconSize} text-info-content`} />;
-    }
-    
-    if (!slot.available || slot.status === 'unavailable') {
-      return <X className={`${iconSize} text-base-content/30`} />;
-    }
-    
-    // Default available
-    return <Plus className={`${iconSize} text-base-content/60`} />;
-  };
-
-  const getSlotContent = (slot: TimeSlot) => {
-    if (slot.status === 'waiting' && slot.waitingUser) {
-      return (
-        <>
-          <span className="text-sm font-bold text-success-content">{slot.time}</span>
-          <div className="text-center">
-            <div className="text-sm font-semibold text-success-content">
-              {slot.waitingUser.firstName}
-            </div>
-            <div className="inline-flex items-center justify-center bg-success-content text-success text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5">
-              {slot.waitingUser.duration}min
-            </div>
-          </div>
-          <div className="absolute top-1 right-1 bg-success-content text-success text-xs font-bold px-1 py-0.5 rounded text-center leading-none">
-            JOIN
-          </div>
-        </>
-      );
-    }
-    
-    if (!slot.available || slot.status === 'unavailable') {
-      return (
-        <>
-          <span className="text-sm font-medium text-base-content/30">{slot.time}</span>
-          <span className="text-xs text-base-content/20">Unavailable</span>
-        </>
-      );
-    }
-    
-    return (
-      <>
-        <span className="text-sm font-medium text-base-content">{slot.time}</span>
-        <span className="text-xs text-base-content/60">Available</span>
-      </>
-    );
-  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2 text-base-content/70">Loading available times...</span>
+      <div className="space-y-6">
+        {/* Date Header Skeleton */}
+        <div className="text-center">
+          <div className="h-6 bg-base-200 rounded w-64 mx-auto animate-pulse"></div>
+        </div>
+
+        {/* Skeleton Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="min-h-[140px] p-4 rounded-xl bg-base-200 animate-pulse">
+              <div className="flex flex-col h-full">
+                <div className="w-12 h-12 bg-base-300 rounded-full mb-3"></div>
+                <div className="h-8 bg-base-300 rounded w-20 mb-2"></div>
+                <div className="h-4 bg-base-300 rounded w-32 mb-1"></div>
+                <div className="h-3 bg-base-300 rounded w-24"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
+          <span className="text-base-content/70 text-sm">Loading available times...</span>
+        </div>
       </div>
     );
   }
@@ -188,32 +123,19 @@ export function CalendarGrid({
         </h3>
       </div>
 
-      {/* Time Slots Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+      {/* Time Slots Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {timeSlots.map((slot, index) => {
           if (index === 0) console.log('First slot debug:', { available: slot.available, status: slot.status, slot });
           return (
-            <button
+            <SessionCard
               key={`${slot.date}-${slot.time}`}
+              slot={slot}
               onClick={() => {
                 console.log('Slot clicked:', { available: slot.available, status: slot.status, slot });
-                slot.available && onSlotClick(slot);
+                onSlotClick(slot);
               }}
-              className={getSlotClassName(slot)}
-              disabled={!slot.available}
-              title={
-                slot.status === 'waiting' && slot.waitingUser
-                  ? `Join ${slot.waitingUser.firstName}'s ${slot.waitingUser.duration}min session`
-                  : slot.status === 'unavailable'
-                  ? 'This time slot is not available'
-                  : 'Book this time slot'
-              }
-            >
-              <div className="flex items-center gap-1">
-                {getSlotIcon(slot)}
-              </div>
-              {getSlotContent(slot)}
-            </button>
+            />
           );
         })}
       </div>

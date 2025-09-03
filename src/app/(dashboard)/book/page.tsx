@@ -155,27 +155,61 @@ export default function BookSessionPage() {
               userLanguage={profile.language}
             />
 
-            {/* Enhanced Legend */}
-            <div className="bg-base-200 rounded-lg p-4 mt-6">
-              <h4 className="text-sm font-semibold text-base-content/80 mb-3 text-center">Legend</h4>
-              <div className="flex items-center justify-center flex-wrap gap-6 text-sm">
-                <div className="flex items-center gap-2 bg-success text-success-content px-3 py-2 rounded-lg shadow-sm">
-                  <Users className="w-4 h-4" />
-                  <span className="font-medium">Partner waiting</span>
-                  <div className="text-xs bg-success-content text-success px-1.5 py-0.5 rounded-full font-bold">JOIN!</div>
+            {/* Modern Floating Legend */}
+            <div className="mt-8">
+              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-4 shadow-lg">
+                <div className="flex items-center justify-center flex-wrap gap-4 text-sm">
+                  {/* Partner Waiting */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+                      <Users className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">Partner waiting</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400">Join instantly</span>
+                    </div>
+                    <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-2 py-1 rounded-full">
+                      JOIN!
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
+
+                  {/* Available */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-slate-100 to-zinc-200 dark:from-slate-700 dark:to-zinc-700 border border-orange-200 dark:border-orange-700 rounded-lg flex items-center justify-center shadow-sm">
+                      <Plus className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">Available</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400">Create session</span>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 hidden lg:block"></div>
+
+                  {/* Unavailable */}
+                  <div className="flex items-center gap-3 opacity-70">
+                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-sm">
+                      <X className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-600 dark:text-gray-400">Unavailable</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-500">Not bookable</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 bg-base-100 border-2 border-base-300 px-3 py-2 rounded-lg">
-                  <Plus className="w-4 h-4 text-base-content/60" />
-                  <span>Available</span>
-                </div>
-                <div className="flex items-center gap-2 bg-base-200 px-3 py-2 rounded-lg opacity-50">
-                  <X className="w-4 h-4 text-base-content/30" />
-                  <span className="text-base-content/60">Unavailable</span>
+
+                {/* Tip */}
+                <div className="flex items-center justify-center mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span>Green cards pulse when partners are ready - click to join instantly!</span>
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-base-content/60 text-center mt-2">
-                💡 Green slots pulse and show partner names - click to join instantly!
-              </p>
             </div>
           </div>
         </div>
