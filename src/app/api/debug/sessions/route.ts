@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get all sessions for the date (not just waiting/matched)
-    const { data: allSessions, error: sessionsError } = await supabase
+    // Get matched sessions for the current user to debug partner issue
+    const { data: matchedSessions, error: matchedError } = await supabase
       .from('sessions')
       .select(`
         id,
@@ -43,11 +43,11 @@ export async function GET(request: NextRequest) {
         user2_id,
         created_at,
         updated_at,
-        user1_profile:profiles!sessions_user1_id_fkey(first_name, last_name, language, email),
-        user2_profile:profiles!sessions_user2_id_fkey(first_name, last_name, language, email)
+        user1:profiles!sessions_user1_id_fkey(id, first_name, avatar_url, language),
+        user2:profiles!sessions_user2_id_fkey(id, first_name, avatar_url, language)
       `)
-      .gte('start_time', startOfDay.toISOString())
-      .lte('start_time', endOfDay.toISOString())
+      .eq('status', 'matched')
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
       .order('start_time');
 
     // Get current user profile
@@ -62,6 +62,27 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('id, first_name, last_name, language, email, created_at');
 
+    // Analyze the matched sessions data
+    const analysis = matchedSessions?.map(session => {
+      const isUser1 = session.user1_id === user.id;
+      const partner = isUser1 ? session.user2 : session.user1;
+      
+      return {
+        sessionId: session.id,
+        isCurrentUserUser1: isUser1,
+        user1_id: session.user1_id,
+        user2_id: session.user2_id,
+        user1_data: session.user1,
+        user2_data: session.user2,
+        determined_partner: partner,
+        partner_issues: {
+          partner_is_null: partner === null,
+          user1_missing: session.user1 === null,
+          user2_missing: session.user2 === null,
+        }
+      };
+    });
+
     return NextResponse.json({
       debug: {
         currentUser: {
@@ -69,16 +90,12 @@ export async function GET(request: NextRequest) {
           email: user.email,
           profile: currentUserProfile
         },
-        dateRange: {
-          date,
-          startOfDay: startOfDay.toISOString(),
-          endOfDay: endOfDay.toISOString()
-        },
         database: {
-          sessionsError: sessionsError?.message,
-          sessionsFound: allSessions?.length || 0,
-          sessions: allSessions || [],
-          allProfiles: allProfiles || []
+          matchedError: matchedError?.message,
+          matchedSessionsFound: matchedSessions?.length || 0,
+          matchedSessions: matchedSessions || [],
+          allProfiles: allProfiles || [],
+          analysis
         }
       }
     });

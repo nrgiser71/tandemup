@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || 'all'; // 'upcoming', 'past', or 'all'
 
     const now = new Date();
+    // First, try the original approach with joined profiles
     let query = supabase
       .from('sessions')
       .select(`
@@ -68,6 +69,85 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if we have partner profile data, if not, fetch manually due to RLS policies
+    const needsPartnerFetch = sessions?.some(session => 
+      session.status === 'matched' && 
+      ((session.user1_id === user.id && !session.user2) || 
+       (session.user2_id === user.id && !session.user1))
+    );
+
+    if (needsPartnerFetch) {
+      console.log('=== RLS ISSUE DETECTED - FETCHING PARTNER PROFILES MANUALLY ===');
+      
+      // Get unique partner IDs
+      const partnerIds = new Set<string>();
+      sessions?.forEach(session => {
+        if (session.status === 'matched') {
+          const partnerId = session.user1_id === user.id ? session.user2_id : session.user1_id;
+          if (partnerId) {
+            partnerIds.add(partnerId);
+          }
+        }
+      });
+
+      console.log('Partner IDs to fetch:', Array.from(partnerIds));
+
+      // Fetch partner profiles using admin client to bypass RLS
+      let partnerProfiles = new Map();
+      const adminClient = (await import('@/lib/supabase/server')).createAdminClient();
+      
+      if (adminClient && partnerIds.size > 0) {
+        const { data: profiles } = await adminClient
+          .from('profiles')
+          .select('id, first_name, avatar_url, language')
+          .in('id', Array.from(partnerIds));
+        
+        profiles?.forEach(profile => {
+          partnerProfiles.set(profile.id, profile);
+        });
+      }
+
+      // Manually attach partner profiles to sessions
+      sessions?.forEach(session => {
+        if (session.status === 'matched') {
+          const isUser1 = session.user1_id === user.id;
+          const partnerId = isUser1 ? session.user2_id : session.user1_id;
+          
+          if (partnerId && partnerProfiles.has(partnerId)) {
+            const partnerProfile = partnerProfiles.get(partnerId);
+            if (isUser1) {
+              session.user2 = partnerProfile;
+            } else {
+              session.user1 = partnerProfile;
+            }
+          }
+        }
+      });
+
+      console.log('Partner profiles fetched and attached');
+    }
+
+    // Debug logging for session data
+    console.log('=== SESSION DEBUG INFO ===');
+    console.log('Current user ID:', user.id);
+    console.log('Raw sessions from DB:', JSON.stringify(sessions, null, 2));
+    
+    // Check for matched sessions specifically
+    const matchedSessions = sessions?.filter(s => s.status === 'matched');
+    if (matchedSessions && matchedSessions.length > 0) {
+      console.log('=== MATCHED SESSIONS ANALYSIS ===');
+      matchedSessions.forEach((session: any, index: number) => {
+        console.log(`Matched Session ${index + 1}:`);
+        console.log('  - Session ID:', session.id);
+        console.log('  - User1 ID:', session.user1_id);
+        console.log('  - User2 ID:', session.user2_id);
+        console.log('  - User1 profile data:', JSON.stringify(session.user1, null, 2));
+        console.log('  - User2 profile data:', JSON.stringify(session.user2, null, 2));
+        console.log('  - Is current user User1:', session.user1_id === user.id);
+        console.log('  - Partner would be:', session.user1_id === user.id ? 'user2' : 'user1');
+      });
+    }
+
     // Transform the data for the frontend
     const transformedSessions = sessions?.map((session: any) => {
       const isUser1 = session.user1_id === user.id;
@@ -75,6 +155,23 @@ export async function GET(request: NextRequest) {
       const canCancel = session.status === 'waiting' || 
                        (session.status === 'matched' && new Date(session.start_time) > new Date(Date.now() + 60 * 60 * 1000));
       const canJoin = session.status === 'matched'; // Allow joining any matched session for testing
+
+      // Debug logging for transformation
+      if (session.status === 'matched') {
+        console.log(`=== TRANSFORMATION DEBUG for Session ${session.id} ===`);
+        console.log('  - Current user is User1:', isUser1);
+        console.log('  - Raw partner object:', JSON.stringify(partner, null, 2));
+        console.log('  - Partner exists:', !!partner);
+        if (partner) {
+          console.log('  - Partner ID:', partner.id);
+          console.log('  - Partner first_name:', partner.first_name);
+          console.log('  - Partner language:', partner.language);
+        } else {
+          console.log('  - Partner is null - checking why:');
+          console.log('    - session.user1:', JSON.stringify(session.user1, null, 2));
+          console.log('    - session.user2:', JSON.stringify(session.user2, null, 2));
+        }
+      }
 
       return {
         id: session.id,
@@ -95,6 +192,18 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Debug final transformed sessions
+    console.log('=== FINAL TRANSFORMED SESSIONS ===');
+    const matchedTransformed = transformedSessions?.filter(s => s.status === 'matched');
+    if (matchedTransformed && matchedTransformed.length > 0) {
+      matchedTransformed.forEach((session, index) => {
+        console.log(`Transformed Matched Session ${index + 1}:`);
+        console.log('  - ID:', session.id);
+        console.log('  - Status:', session.status);
+        console.log('  - Partner:', JSON.stringify(session.partner, null, 2));
+      });
+    }
+
     // Separate into upcoming and past if type is 'all'
     if (type === 'all') {
       const upcoming = transformedSessions?.filter(
@@ -103,6 +212,10 @@ export async function GET(request: NextRequest) {
       const past = transformedSessions?.filter(
         session => new Date(session.startTime) < now
       ) || [];
+
+      console.log('=== RESPONSE DEBUG ===');
+      console.log('Upcoming sessions count:', upcoming.length);
+      console.log('Past sessions count:', past.length);
 
       return NextResponse.json({ 
         data: { upcoming, past },
