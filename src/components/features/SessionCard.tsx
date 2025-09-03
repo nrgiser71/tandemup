@@ -41,7 +41,6 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
         bg-gradient-to-br from-emerald-400 to-emerald-500 border border-emerald-300/50
         text-white shadow-md shadow-emerald-500/20
         hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] hover:-translate-y-0.5
-        animate-pulse hover:animate-none
       `;
     }
 
@@ -160,7 +159,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
     if (slot.status === 'waiting') {
       return (
         <div className="absolute top-3 right-3 z-10">
-          <div className="bg-white text-emerald-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm animate-bounce">
+          <div className="bg-white text-emerald-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
             MATCH
           </div>
         </div>
