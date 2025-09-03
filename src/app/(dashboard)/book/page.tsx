@@ -155,56 +155,56 @@ export default function BookSessionPage() {
               userLanguage={profile.language}
             />
 
-            {/* Modern Floating Legend */}
+            {/* Apple-Style Floating Legend */}
             <div className="mt-8">
-              <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center justify-center flex-wrap gap-4 text-sm">
+              <div className="bg-white/95 backdrop-blur-xl border border-gray-200/60 rounded-2xl p-6 shadow-lg shadow-gray-200/50">
+                <div className="flex items-center justify-center flex-wrap gap-6 text-sm">
                   {/* Partner Waiting */}
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
-                      <Users className="w-4 h-4 text-white" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20">
+                      <Users className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">Partner waiting</span>
-                      <span className="text-xs text-slate-600 dark:text-slate-400">Join instantly</span>
+                      <span className="font-semibold text-gray-900">Partner waiting</span>
+                      <span className="text-xs text-gray-600">Join instantly</span>
                     </div>
-                    <div className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
                       MATCH
                     </div>
                   </div>
 
                   {/* Divider */}
-                  <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 hidden sm:block"></div>
+                  <div className="w-px h-12 bg-gray-200 hidden sm:block"></div>
 
                   {/* Available */}
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-slate-100 to-zinc-200 dark:from-slate-700 dark:to-zinc-700 border border-orange-200 dark:border-orange-700 rounded-lg flex items-center justify-center shadow-sm">
-                      <Plus className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm">
+                      <Plus className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">Available</span>
-                      <span className="text-xs text-slate-600 dark:text-slate-400">Create session</span>
+                      <span className="font-semibold text-gray-900">Available</span>
+                      <span className="text-xs text-gray-600">Create session</span>
                     </div>
                   </div>
 
                   {/* Divider */}
-                  <div className="w-px h-8 bg-slate-300 dark:bg-slate-600 hidden lg:block"></div>
+                  <div className="w-px h-12 bg-gray-200 hidden lg:block"></div>
 
                   {/* Unavailable */}
                   <div className="flex items-center gap-3 opacity-70">
-                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center shadow-sm">
-                      <X className="w-4 h-4 text-gray-400" />
+                    <div className="w-10 h-10 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center shadow-sm">
+                      <X className="w-5 h-5 text-gray-400" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-600 dark:text-gray-400">Unavailable</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-500">Not bookable</span>
+                      <span className="font-medium text-gray-500">Unavailable</span>
+                      <span className="text-xs text-gray-400">Not bookable</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Tip */}
-                <div className="flex items-center justify-center mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
-                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex items-center justify-center mt-6 pt-4 border-t border-gray-200/60">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                     <span>Green cards pulse when partners are ready - click to match!</span>
                   </div>

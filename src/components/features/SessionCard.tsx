@@ -25,47 +25,39 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
 
   const getCardClassName = () => {
     const baseClasses = `
-      group relative min-h-[140px] p-4 rounded-xl transition-all duration-300 cursor-pointer
-      border backdrop-blur-sm overflow-hidden
+      group relative min-h-[140px] p-5 rounded-2xl transition-all duration-300 cursor-pointer
+      overflow-hidden
     `;
 
     if (!slot.available || slot.status === 'unavailable') {
       return `${baseClasses}
-        bg-gray-50 border-gray-200 cursor-not-allowed opacity-60
-        dark:bg-gray-800/50 dark:border-gray-700
-        relative before:absolute before:inset-0 
-        before:bg-[repeating-linear-gradient(45deg,transparent,transparent_8px,rgba(0,0,0,0.05)_8px,rgba(0,0,0,0.05)_16px)]
+        bg-white border border-gray-100 cursor-not-allowed shadow-sm
+        hover:shadow-sm opacity-70
       `;
     }
 
     if (slot.status === 'waiting') {
       return `${baseClasses}
-        bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400
-        text-white shadow-lg shadow-emerald-500/25
-        hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02] hover:-translate-y-1
-        before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent
-        ring-1 ring-white/20 animate-pulse hover:animate-none
+        bg-gradient-to-br from-emerald-400 to-emerald-500 border border-emerald-300/50
+        text-white shadow-md shadow-emerald-500/20
+        hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] hover:-translate-y-0.5
+        animate-pulse hover:animate-none
       `;
     }
 
     if (slot.status === 'matched') {
       return `${baseClasses}
-        bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400
-        text-white shadow-lg shadow-blue-500/25
-        hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] hover:-translate-y-1
-        before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent
-        ring-1 ring-white/20
+        bg-gradient-to-br from-blue-400 to-blue-500 border border-blue-300/50
+        text-white shadow-md shadow-blue-500/20
+        hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] hover:-translate-y-0.5
       `;
     }
 
-    // Default available
+    // Default available - Apple white style
     return `${baseClasses}
-      bg-gradient-to-br from-slate-50 to-zinc-100 border-slate-200
-      hover:from-slate-100 hover:to-zinc-200 hover:border-orange-300
-      hover:shadow-lg hover:shadow-slate-300/50 hover:scale-[1.02] hover:-translate-y-1
-      dark:from-slate-800 dark:to-zinc-800 dark:border-slate-700
-      dark:hover:from-slate-700 dark:hover:to-zinc-700 dark:hover:border-orange-500
-      relative before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/5 before:to-transparent
+      bg-white border border-gray-200 shadow-sm
+      hover:shadow-md hover:border-blue-300 hover:scale-[1.02] hover:-translate-y-0.5
+      hover:bg-blue-50/30
     `;
   };
 
@@ -75,7 +67,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
     if (slot.status === 'waiting') {
       return (
         <div className="relative">
-          <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+          <div className="p-2 bg-white/25 rounded-full backdrop-blur-sm">
             <Users className={`${iconClasses} text-white`} />
           </div>
           <div className="absolute -top-1 -right-1 bg-white text-emerald-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-sm">
@@ -87,7 +79,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
 
     if (slot.status === 'matched') {
       return (
-        <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+        <div className="p-2 bg-white/25 rounded-full backdrop-blur-sm">
           <UserCheck className={`${iconClasses} text-white`} />
         </div>
       );
@@ -95,16 +87,16 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
 
     if (!slot.available || slot.status === 'unavailable') {
       return (
-        <div className="p-2 bg-gray-100 rounded-full">
+        <div className="p-3 bg-gray-50 rounded-full border border-gray-100">
           <Lock className={`${iconClasses} text-gray-400`} />
         </div>
       );
     }
 
-    // Available
+    // Available - Apple blue style
     return (
-      <div className="p-2 bg-orange-100 rounded-full group-hover:bg-orange-200 transition-colors">
-        <Plus className={`${iconClasses} text-orange-600 group-hover:text-orange-700`} />
+      <div className="p-3 bg-blue-50 rounded-full border border-blue-100 group-hover:bg-blue-100 group-hover:border-blue-200 transition-all">
+        <Plus className={`${iconClasses} text-blue-600 group-hover:text-blue-700`} />
       </div>
     );
   };
@@ -112,7 +104,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
   const getTimeDisplay = () => {
     const timeClasses = slot.status === 'waiting' || slot.status === 'matched' 
       ? "text-2xl font-bold text-white" 
-      : "text-2xl font-bold text-slate-800 dark:text-slate-200";
+      : "text-2xl font-bold text-gray-900";
     
     return <div className={timeClasses}>{slot.time}</div>;
   };
@@ -149,17 +141,17 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
     if (!slot.available || slot.status === 'unavailable') {
       return (
         <div className="flex-1 space-y-1">
-          <div className="text-gray-600 dark:text-gray-400 font-medium">Unavailable</div>
-          <div className="text-gray-500 dark:text-gray-500 text-sm">Not bookable</div>
+          <div className="text-gray-500 font-medium">Unavailable</div>
+          <div className="text-gray-400 text-sm">Not bookable</div>
         </div>
       );
     }
 
-    // Available
+    // Available - Apple style text
     return (
       <div className="flex-1 space-y-1">
-        <div className="text-slate-700 dark:text-slate-300 font-medium">Create session</div>
-        <div className="text-slate-600 dark:text-slate-400 text-sm">Wait for a partner</div>
+        <div className="text-gray-900 font-semibold">Create session</div>
+        <div className="text-gray-600 text-sm">Wait for a partner</div>
       </div>
     );
   };
@@ -177,8 +169,10 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
 
     if (slot.available && slot.status === 'available') {
       return (
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ChevronRight className="w-5 h-5 text-orange-600" />
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="p-1 bg-blue-100 rounded-full">
+            <ChevronRight className="w-4 h-4 text-blue-600" />
+          </div>
         </div>
       );
     }

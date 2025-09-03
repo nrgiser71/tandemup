@@ -84,18 +84,18 @@ export function CalendarGrid({
       <div className="space-y-6">
         {/* Date Header Skeleton */}
         <div className="text-center">
-          <div className="h-6 bg-base-200 rounded w-64 mx-auto animate-pulse"></div>
+          <div className="h-6 bg-gray-100 rounded-lg w-64 mx-auto animate-pulse"></div>
         </div>
 
         {/* Skeleton Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="min-h-[140px] p-4 rounded-xl bg-base-200 animate-pulse">
+            <div key={i} className="min-h-[140px] p-5 rounded-2xl bg-white border border-gray-100 shadow-sm animate-pulse">
               <div className="flex flex-col h-full">
-                <div className="w-12 h-12 bg-base-300 rounded-full mb-3"></div>
-                <div className="h-8 bg-base-300 rounded w-20 mb-2"></div>
-                <div className="h-4 bg-base-300 rounded w-32 mb-1"></div>
-                <div className="h-3 bg-base-300 rounded w-24"></div>
+                <div className="w-12 h-12 bg-gray-100 rounded-full mb-3"></div>
+                <div className="h-8 bg-gray-100 rounded-lg w-20 mb-2"></div>
+                <div className="h-4 bg-gray-100 rounded w-32 mb-1"></div>
+                <div className="h-3 bg-gray-100 rounded w-24"></div>
               </div>
             </div>
           ))}
