@@ -386,11 +386,18 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Partner Info */}
-                        {session.partner ? (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-accent" />
-                            <span className="text-sm">Partner: {session.partner.firstName}</span>
-                          </div>
+                        {session.status === 'matched' ? (
+                          session.partner ? (
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-accent" />
+                              <span className="text-sm">Matched with {session.partner.firstName}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-success">
+                              <Users className="w-4 h-4" />
+                              <span className="text-sm">Matched - Partner confirmed</span>
+                            </div>
+                          )
                         ) : (
                           <div className="flex items-center gap-2 text-warning">
                             <User className="w-4 h-4" />

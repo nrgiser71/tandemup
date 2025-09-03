@@ -251,11 +251,18 @@ export default function MySessionsPage() {
                         </div>
 
                         {/* Partner Info */}
-                        {session.partner ? (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-accent" />
-                            <span>Partner: {session.partner.firstName}</span>
-                          </div>
+                        {session.status === 'matched' ? (
+                          session.partner ? (
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-accent" />
+                              <span>Matched with {session.partner.firstName}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-success">
+                              <Users className="w-4 h-4" />
+                              <span>Matched - Partner confirmed</span>
+                            </div>
+                          )
                         ) : (
                           <div className="flex items-center gap-2 text-warning">
                             <User className="w-4 h-4" />
@@ -352,12 +359,19 @@ export default function MySessionsPage() {
                         </div>
 
                         {/* Partner Info */}
-                        {session.partner && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-accent" />
-                            <span>Partner: {session.partner.firstName}</span>
-                          </div>
-                        )}
+                        {session.status === 'matched' || session.status === 'completed' || session.status === 'no_show' ? (
+                          session.partner ? (
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-accent" />
+                              <span>Partner: {session.partner.firstName}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-success">
+                              <Users className="w-4 h-4" />
+                              <span>Had partner</span>
+                            </div>
+                          )
+                        ) : null}
 
                         {/* No Show Warning */}
                         {session.status === 'no_show' && (
