@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, hasAdminAccess } from '@/lib/supabase/server';
 
@@ -5,13 +6,20 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    
     // Check admin access
-    if (!await hasAdminAccess(request)) {
+    if (!hasAdminAccess()) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
+      );
+    }
+
+    const supabase = await createAdminClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Admin client not available' },
+        { status: 500 }
       );
     }
 
@@ -38,31 +46,31 @@ export async function POST(request: NextRequest) {
     let repairedCount = 0;
     let deletedCount = 0;
 
-    for (const session of orphanedSessions) {
+    for (const session of (orphanedSessions || [])) {
       // Check if user1 profile exists
       const { data: user1Profile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', session.user1_id)
+        .eq('id', (session as any).user1_id)
         .single();
 
       // Check if user2 profile exists (if user2 exists)
       let user2Profile = null;
-      if (session.user2_id) {
+      if ((session as any).user2_id) {
         const { data } = await supabase
           .from('profiles')
           .select('id')
-          .eq('id', session.user2_id)
+          .eq('id', (session as any).user2_id)
           .single();
         user2Profile = data;
       }
 
-      const isOrphaned = !user1Profile || (session.user2_id && !user2Profile);
+      const isOrphaned = !user1Profile || ((session as any).user2_id && !user2Profile);
       
       if (isOrphaned) {
         const missingProfiles = [];
-        if (!user1Profile) missingProfiles.push(session.user1_id);
-        if (session.user2_id && !user2Profile) missingProfiles.push(session.user2_id);
+        if (!user1Profile) missingProfiles.push((session as any).user1_id);
+        if ((session as any).user2_id && !user2Profile) missingProfiles.push((session as any).user2_id);
 
         // Try to get user info from auth.users to create profiles
         let repaired = false;
@@ -72,7 +80,7 @@ export async function POST(request: NextRequest) {
             
             if (authUser?.user) {
               // Create the missing profile
-              const { error: createError } = await supabase
+              const { error: createError } = await (supabase as any)
                 .from('profiles')
                 .upsert({
                   id: authUser.user.id,
@@ -100,18 +108,18 @@ export async function POST(request: NextRequest) {
           const { error: deleteError } = await supabase
             .from('sessions')
             .delete()
-            .eq('id', session.id);
+            .eq('id', (session as any).id);
 
           if (!deleteError) {
             deletedCount++;
-            console.log(`Deleted orphaned session: ${session.id}`);
+            console.log(`Deleted orphaned session: ${(session as any).id}`);
           }
         }
 
         orphanedResults.push({
-          sessionId: session.id,
-          user1_id: session.user1_id,
-          user2_id: session.user2_id,
+          sessionId: (session as any).id,
+          user1_id: (session as any).user1_id,
+          user2_id: (session as any).user2_id,
           missingProfiles,
           repaired,
           action: repaired ? 'repaired' : 'deleted'
@@ -121,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Orphaned session repair complete',
-      totalSessions: orphanedSessions.length,
+      totalSessions: orphanedSessions?.length || 0,
       orphanedFound: orphanedResults.length,
       profilesRepaired: repairedCount,
       sessionsDeleted: deletedCount,

@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
 
     // Then get user profiles separately
     const userIds = existingSessions?.flatMap(session => [
-      session.user1_id, 
-      session.user2_id
+      (session as any).user1_id, 
+      (session as any).user2_id
     ].filter(Boolean)) || [];
 
     const { data: userProfiles, error: profilesError } = userIds.length > 0 ? await supabase
@@ -110,14 +110,14 @@ export async function GET(request: NextRequest) {
     // Create a map of user profiles
     const profilesMap = new Map();
     userProfiles?.forEach(profile => {
-      profilesMap.set(profile.id, profile);
+      profilesMap.set((profile as any).id, profile);
     });
 
     // Add profiles to sessions
     const sessionsWithProfiles = existingSessions?.map(session => ({
-      ...session,
-      user1_profile: session.user1_id ? profilesMap.get(session.user1_id) : null,
-      user2_profile: session.user2_id ? profilesMap.get(session.user2_id) : null,
+      ...(session as any),
+      user1_profile: (session as any).user1_id ? profilesMap.get((session as any).user1_id) : null,
+      user2_profile: (session as any).user2_id ? profilesMap.get((session as any).user2_id) : null,
     }));
 
     console.log('DEBUG - Existing sessions query:', {

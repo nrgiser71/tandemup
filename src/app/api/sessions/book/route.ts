@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
         id: actualUser.id,
         email: actualUser.email || '',
         first_name: actualUser.user_metadata?.first_name || actualUser.email?.split('@')[0] || 'User',
-        language: (actualUser.user_metadata?.language as 'en' | 'nl' | 'fr') || 'en',
-        timezone: actualUser.user_metadata?.timezone || 'Europe/Amsterdam',
+        language: ((actualUser.user_metadata as any)?.language as 'en' | 'nl' | 'fr') || 'en',
+        timezone: (actualUser.user_metadata as any)?.timezone || 'Europe/Amsterdam',
         subscription_status: 'trial',
         trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
       };
