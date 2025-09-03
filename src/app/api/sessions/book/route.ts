@@ -208,95 +208,36 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Try using admin client first if available
-      let updatedSession = null;
-      let updateError = null;
-      
-      const adminClient = createAdminClient();
-      if (adminClient) {
-        console.log('Using admin client to update session (bypasses RLS)');
-        const { data, error } = await (adminClient as any)
-          .from('sessions')
-          .update({
-            user2_id: actualUser.id,
-            status: 'matched',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sessionId)
-          .select()
-          .single();
-        
-        updatedSession = data;
-        updateError = error;
-      } else {
-        console.log('Admin client not available, using regular client');
-        console.log('Attempting to update session with join:', {
-          sessionId,
-          currentUser: actualUser.id,
-          updateData: {
-            user2_id: actualUser.id,
-            status: 'matched',
-            updated_at: new Date().toISOString(),
-          }
-        });
+      // Update the session to add the second user (RLS policy now allows this)
+      console.log('Attempting to update session with join:', {
+        sessionId,
+        currentUser: actualUser.id,
+        updateData: {
+          user2_id: actualUser.id,
+          status: 'matched',
+          updated_at: new Date().toISOString(),
+        }
+      });
 
-        const { data, error } = await (supabase as any)
-          .from('sessions')
-          .update({
-            user2_id: actualUser.id,
-            status: 'matched',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sessionId)
-          .select()
-          .single();
-        
-        updatedSession = data;
-        updateError = error;
-      }
+      const { data: updatedSession, error: updateError } = await (supabase as any)
+        .from('sessions')
+        .update({
+          user2_id: actualUser.id,
+          status: 'matched',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId)
+        .select()
+        .single();
 
       if (updateError) {
-        console.error('Database update failed with detailed error:', {
+        console.error('Database update failed:', {
           error: updateError,
           code: updateError.code,
           message: updateError.message,
-          details: updateError.details,
-          hint: updateError.hint,
           sessionId,
           userId: actualUser.id
         });
-        
-        // Check if this is an RLS policy issue - if so, provide workaround
-        if (updateError.code === '42501' || updateError.message?.includes('policy') || updateError.message?.includes('new row violates')) {
-          console.log('RLS policy is blocking the update. This is a known issue.');
-          console.log('To fix this, run the following SQL in your Supabase dashboard:');
-          console.log(`
--- Fix RLS policy to allow users to join waiting sessions
-DROP POLICY IF EXISTS "Users can update their own sessions" ON sessions;
-
-CREATE POLICY "Users can update their own sessions or join waiting sessions" ON sessions
-  FOR UPDATE USING (
-    auth.uid() = user1_id 
-    OR auth.uid() = user2_id 
-    OR (status = 'waiting' AND user2_id IS NULL AND auth.uid() != user1_id)
-  );
-          `);
-          
-          // Return simulated success for demo purposes
-          console.log('Returning simulated success for demo purposes');
-          return NextResponse.json({ 
-            data: {
-              id: sessionId,
-              status: 'matched',
-              user1_id: (existingSession as any).user1_id,
-              user2_id: actualUser.id,
-              start_time: (existingSession as any).start_time,
-              duration: (existingSession as any).duration,
-              jitsi_room_name: (existingSession as any).jitsi_room_name,
-            },
-            message: 'Successfully joined session! (Simulated for demo - RLS policy needs update)'
-          });
-        }
         
         // For demo purposes, if database update fails, return mock success
         if (mockUser) {
