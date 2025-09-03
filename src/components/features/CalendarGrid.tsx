@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { generateTimeSlots } from '@/lib/utils';
 import { TimeSlot } from '@/types';
-import { Clock, Users, Loader2 } from 'lucide-react';
+import { Clock, Users, Loader2, Plus, X, Calendar, UserCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 interface CalendarGridProps {
@@ -78,54 +78,89 @@ export function CalendarGrid({
   };
 
   const getSlotClassName = (slot: TimeSlot) => {
-    const baseClasses = 'btn btn-sm h-12 flex-col gap-1 p-2 transition-all duration-200';
+    const baseClasses = 'btn btn-sm h-14 flex-col gap-1 p-2 transition-all duration-300 relative';
     
     if (!slot.available || slot.status === 'unavailable') {
-      return `${baseClasses} btn-disabled bg-base-300 text-base-content/40`;
+      return `${baseClasses} btn-disabled bg-base-200 text-base-content/30 cursor-not-allowed opacity-50`;
     }
     
     if (slot.status === 'waiting') {
-      return `${baseClasses} btn-success hover:scale-105`;
+      return `${baseClasses} bg-success hover:bg-success-focus text-success-content font-semibold 
+              ring-2 ring-success ring-opacity-50 animate-pulse hover:animate-none hover:scale-105 
+              shadow-lg hover:shadow-xl cursor-pointer`;
     }
     
     if (slot.status === 'matched') {
-      return `${baseClasses} btn-info`;
+      return `${baseClasses} bg-info hover:bg-info-focus text-info-content`;
     }
     
+    // Check if this is user's own session by looking at session data
+    // We'll add this logic when we have the user context
+    
     // Default available
-    return `${baseClasses} btn-warning hover:scale-105`;
+    return `${baseClasses} bg-base-100 hover:bg-base-200 border-2 border-base-300 
+            hover:border-warning text-base-content hover:scale-105 cursor-pointer`;
   };
 
   const getSlotIcon = (slot: TimeSlot) => {
+    const iconSize = "w-5 h-5";
+    
     if (slot.status === 'waiting') {
-      return <Users className="w-3 h-3" />;
+      return (
+        <div className="relative">
+          <Users className={`${iconSize} text-success-content`} />
+          <div className="absolute -top-1 -right-1 bg-success-content text-success rounded-full w-3 h-3 flex items-center justify-center text-xs font-bold">
+            1
+          </div>
+        </div>
+      );
     }
     
     if (slot.status === 'matched') {
-      return <Users className="w-3 h-3" />;
+      return <UserCheck className={`${iconSize} text-info-content`} />;
     }
     
-    return <Clock className="w-3 h-3" />;
+    if (!slot.available || slot.status === 'unavailable') {
+      return <X className={`${iconSize} text-base-content/30`} />;
+    }
+    
+    // Default available
+    return <Plus className={`${iconSize} text-base-content/60`} />;
   };
 
   const getSlotContent = (slot: TimeSlot) => {
     if (slot.status === 'waiting' && slot.waitingUser) {
       return (
         <>
-          <span className="text-xs font-medium">{slot.time}</span>
-          <div className="text-xs opacity-90 leading-tight">
-            {slot.waitingUser.firstName}
-            <br />
-            {slot.waitingUser.duration}min
+          <span className="text-sm font-bold text-success-content">{slot.time}</span>
+          <div className="text-center">
+            <div className="text-sm font-semibold text-success-content">
+              {slot.waitingUser.firstName}
+            </div>
+            <div className="inline-flex items-center justify-center bg-success-content text-success text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5">
+              {slot.waitingUser.duration}min
+            </div>
           </div>
+          <div className="absolute top-1 right-1 bg-success-content text-success text-xs font-bold px-1 py-0.5 rounded text-center leading-none">
+            JOIN
+          </div>
+        </>
+      );
+    }
+    
+    if (!slot.available || slot.status === 'unavailable') {
+      return (
+        <>
+          <span className="text-sm font-medium text-base-content/30">{slot.time}</span>
+          <span className="text-xs text-base-content/20">Unavailable</span>
         </>
       );
     }
     
     return (
       <>
-        <span className="text-xs font-medium">{slot.time}</span>
-        <span className="text-xs opacity-75">Available</span>
+        <span className="text-sm font-medium text-base-content">{slot.time}</span>
+        <span className="text-xs text-base-content/60">Available</span>
       </>
     );
   };

@@ -7,7 +7,7 @@ import { CalendarGrid } from '@/components/features/CalendarGrid';
 import { BookingModal } from '@/components/features/BookingModal';
 import { addDays } from '@/lib/utils';
 import { TimeSlot } from '@/types';
-import { Calendar, Users, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Clock, AlertCircle, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function BookSessionPage() {
@@ -155,20 +155,27 @@ export default function BookSessionPage() {
               userLanguage={profile.language}
             />
 
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-success rounded"></div>
-                <span>Partner waiting</span>
+            {/* Enhanced Legend */}
+            <div className="bg-base-200 rounded-lg p-4 mt-6">
+              <h4 className="text-sm font-semibold text-base-content/80 mb-3 text-center">Legend</h4>
+              <div className="flex items-center justify-center flex-wrap gap-6 text-sm">
+                <div className="flex items-center gap-2 bg-success text-success-content px-3 py-2 rounded-lg shadow-sm">
+                  <Users className="w-4 h-4" />
+                  <span className="font-medium">Partner waiting</span>
+                  <div className="text-xs bg-success-content text-success px-1.5 py-0.5 rounded-full font-bold">JOIN!</div>
+                </div>
+                <div className="flex items-center gap-2 bg-base-100 border-2 border-base-300 px-3 py-2 rounded-lg">
+                  <Plus className="w-4 h-4 text-base-content/60" />
+                  <span>Available</span>
+                </div>
+                <div className="flex items-center gap-2 bg-base-200 px-3 py-2 rounded-lg opacity-50">
+                  <X className="w-4 h-4 text-base-content/30" />
+                  <span className="text-base-content/60">Unavailable</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-warning rounded"></div>
-                <span>Available</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-base-300 rounded"></div>
-                <span>Unavailable</span>
-              </div>
+              <p className="text-xs text-base-content/60 text-center mt-2">
+                💡 Green slots pulse and show partner names - click to join instantly!
+              </p>
             </div>
           </div>
         </div>
