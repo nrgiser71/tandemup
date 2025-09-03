@@ -81,28 +81,45 @@ export async function POST(request: NextRequest) {
 
     console.log('Profile query result:', { profile: profileData, profileError, userId: actualUser.id });
 
-    let profile: any = profileData;
-    if (!profile) {
-      console.log('No profile found for user, using demo mode with default profile');
+    let profile: any;
+    if (!profileData) {
+      console.error('Profile not found for authenticated user:', actualUser.id);
       
-      // Create a mock profile for demo purposes (since Supabase is not configured)
-      profile = {
+      // Try to create the missing profile as a backup measure
+      const profileCreateData = {
         id: actualUser.id,
         email: actualUser.email || '',
         first_name: actualUser.user_metadata?.first_name || actualUser.email?.split('@')[0] || 'User',
-        language: 'en',
-        timezone: 'Europe/Amsterdam',
+        language: (actualUser.user_metadata?.language as 'en' | 'nl' | 'fr') || 'en',
+        timezone: actualUser.user_metadata?.timezone || 'Europe/Amsterdam',
         subscription_status: 'trial',
-        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_banned: false,
-        strike_count: 0,
-        no_show_count: 0,
-        total_sessions: 0
+        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
       };
-      
-      console.log('Using mock profile:', profile);
+
+      console.log('Attempting to create missing profile:', profileCreateData);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: createdProfile, error: createError } = await (supabase as any)
+        .from('profiles')
+        .upsert(profileCreateData)
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Failed to create missing profile:', createError);
+        return NextResponse.json(
+          { 
+            error: 'Profile not found and could not be created. Please contact support.',
+            code: 'MISSING_PROFILE'
+          },
+          { status: 400 }
+        );
+      }
+
+      profile = createdProfile;
+      console.log('Successfully created missing profile:', profile.id);
+    } else {
+      profile = profileData;
     }
 
     // Check if user is banned or has too many strikes

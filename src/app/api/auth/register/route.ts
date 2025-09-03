@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     trialEndsAt.setDate(trialEndsAt.getDate() + 14); // 14-day trial
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: profileError } = await (supabase as any)
+    const { data: profileData, error: profileError } = await (supabase as any)
       .from('profiles')
       .upsert({
         id: authData.user.id,
@@ -85,12 +85,31 @@ export async function POST(request: NextRequest) {
         timezone: 'Europe/Amsterdam', // Default timezone
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      })
+      .select()
+      .single();
 
-    if (profileError) {
+    if (profileError || !profileData) {
       console.error('Profile creation error:', profileError);
-      // Don't return error here as auth user was created successfully
+      
+      // This is a critical error - user can't function without a profile
+      // Clean up the auth user since they can't use the system
+      try {
+        await supabase.auth.admin.deleteUser(authData.user.id);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup user after profile creation failure:', cleanupError);
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to create user profile. Please try again or contact support.',
+          code: 'PROFILE_CREATION_FAILED'
+        },
+        { status: 500 }
+      );
     }
+    
+    console.log('Profile created successfully:', profileData.id);
 
     // Send welcome email
     try {
