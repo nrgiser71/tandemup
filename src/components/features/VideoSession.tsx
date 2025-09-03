@@ -93,7 +93,7 @@ export function VideoSession({
     const domain = process.env.NEXT_PUBLIC_JITSI_DOMAIN || 'meet.element.io';
     
     const options = {
-      roomName: `${session.jitsiRoomName}_${Date.now()}`, // Unique room to avoid moderator conflicts
+      roomName: session.jitsiRoomName, // Use exact room name from session so both users join same room
       width: '100%',
       height: '100%',
       configOverwrite: {
