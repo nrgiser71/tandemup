@@ -167,7 +167,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
   const getActionButton = () => {
     if (slot.status === 'waiting') {
       return (
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 z-10">
           <div className="bg-white text-emerald-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm animate-bounce">
             JOIN NOW!
           </div>
@@ -204,7 +204,7 @@ export function SessionCard({ slot, onClick }: SessionCardProps) {
     >
       {/* Background decoration */}
       {slot.status === 'waiting' && (
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-0" />
       )}
       
       {/* Action button */}
