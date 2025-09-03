@@ -166,6 +166,14 @@ export function VideoSession({
         console.log('Jitsi ready to close');
       });
 
+      // Fallback: Force session start after 3 seconds if not already joined
+      setTimeout(() => {
+        if (!isJoined) {
+          console.log('Jitsi join event not detected, forcing session start');
+          setIsJoined(true);
+        }
+      }, 3000);
+
       // Mount to container
       if (jitsiContainerRef.current) {
         jitsiContainerRef.current.appendChild((api as any).getIFrame());
