@@ -75,7 +75,8 @@ export async function GET(request: NextRequest) {
     const endOfDay = new Date(selectedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const { data: existingSessions } = await supabase
+    // First get sessions
+    const { data: existingSessions, error: sessionsError } = await supabase
       .from('sessions')
       .select(`
         id,
@@ -83,17 +84,63 @@ export async function GET(request: NextRequest) {
         duration,
         status,
         user1_id,
-        user2_id,
-        user1_profile:profiles!sessions_user1_id_fkey(first_name, language),
-        user2_profile:profiles!sessions_user2_id_fkey(first_name, language)
+        user2_id
       `)
       .gte('start_time', startOfDay.toISOString())
       .lte('start_time', endOfDay.toISOString())
       .in('status', ['waiting', 'matched']);
 
+    // Then get user profiles separately
+    const userIds = existingSessions?.flatMap(session => [
+      session.user1_id, 
+      session.user2_id
+    ].filter(Boolean)) || [];
+
+    const { data: userProfiles, error: profilesError } = userIds.length > 0 ? await supabase
+      .from('profiles')
+      .select('id, first_name, language')
+      .in('id', userIds) : { data: [] };
+
+    console.log('DEBUG - Profiles query:', {
+      userIds,
+      profilesError: profilesError?.message,
+      userProfiles
+    });
+
+    // Create a map of user profiles
+    const profilesMap = new Map();
+    userProfiles?.forEach(profile => {
+      profilesMap.set(profile.id, profile);
+    });
+
+    // Add profiles to sessions
+    const sessionsWithProfiles = existingSessions?.map(session => ({
+      ...session,
+      user1_profile: session.user1_id ? profilesMap.get(session.user1_id) : null,
+      user2_profile: session.user2_id ? profilesMap.get(session.user2_id) : null,
+    }));
+
+    console.log('DEBUG - Existing sessions query:', {
+      dateRange: { startOfDay: startOfDay.toISOString(), endOfDay: endOfDay.toISOString() },
+      sessionsFound: existingSessions?.length || 0,
+      profilesFound: userProfiles?.length || 0,
+      currentUserId: user.id,
+      userLanguage: profile.language,
+      sessionsError: sessionsError?.message,
+      sessions: sessionsWithProfiles?.map(s => ({
+        id: s.id,
+        start_time: s.start_time,
+        status: s.status,
+        user1_id: s.user1_id,
+        user2_id: s.user2_id,
+        user1_profile: s.user1_profile,
+        user2_profile: s.user2_profile
+      }))
+    });
+
     // Create a map of existing sessions by time slot
     const sessionMap = new Map();
-    existingSessions?.forEach(session => {
+    sessionsWithProfiles?.forEach(session => {
       const sessionTime = new Date((session as any).start_time).toTimeString().slice(0, 5);
       sessionMap.set(sessionTime, session);
     });
@@ -132,7 +179,27 @@ export async function GET(request: NextRequest) {
         if (session.status === 'waiting') {
           const waitingUserProfile = session.user1_profile || session.user2_profile;
           
-          if (waitingUserProfile?.language === profile.language) {
+          console.log(`DEBUG - Processing waiting session for slot ${slot.time}:`, {
+            sessionId: session.id,
+            waitingUserId: session.user1_id || session.user2_id,
+            waitingUserProfile,
+            currentUserLanguage: profile.language,
+            languageMatch: waitingUserProfile?.language === profile.language
+          });
+          
+          // Skip sessions where the waiting user has no profile
+          if (!waitingUserProfile) {
+            console.log(`DEBUG - Skipping session ${session.id} - no profile found for waiting user`);
+            return {
+              ...slot,
+              date: selectedDate.toISOString().split('T')[0],
+              available: false,
+              status: 'unavailable',
+            };
+          }
+          
+          if (waitingUserProfile.language === profile.language) {
+            console.log(`DEBUG - Showing waiting session to user for slot ${slot.time}`);
             return {
               ...slot,
               date: selectedDate.toISOString().split('T')[0],
@@ -144,6 +211,8 @@ export async function GET(request: NextRequest) {
               },
               sessionId: session.id,
             };
+          } else {
+            console.log(`DEBUG - Language mismatch for slot ${slot.time}: user=${profile.language}, waiting=${waitingUserProfile.language}`);
           }
         }
         
