@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const { data: sessions, error } = await query;
 
     // For testing: Force mock data by simulating error
-    const forceMockData = true; // Set to false to use real database
+    const forceMockData = false; // Set to false to use real database
     const mockError = forceMockData ? { message: 'Forced mock data for testing' } : null;
 
     if (error || mockError) {
