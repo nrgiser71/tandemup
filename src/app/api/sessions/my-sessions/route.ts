@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       console.log('Partner IDs to fetch:', Array.from(partnerIds));
 
       // Fetch partner profiles using admin client to bypass RLS
-      let partnerProfiles = new Map();
+      const partnerProfiles = new Map();
       const adminClient = (await import('@/lib/supabase/server')).createAdminClient();
       
       if (adminClient && partnerIds.size > 0) {
