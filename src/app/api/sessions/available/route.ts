@@ -84,7 +84,8 @@ export async function GET(request: NextRequest) {
         status,
         user1_id,
         user2_id,
-        profiles!sessions_user1_id_fkey(first_name, language)
+        user1_profile:profiles!sessions_user1_id_fkey(first_name, language),
+        user2_profile:profiles!sessions_user2_id_fkey(first_name, language)
       `)
       .gte('start_time', startOfDay.toISOString())
       .lte('start_time', endOfDay.toISOString())
@@ -115,26 +116,38 @@ export async function GET(request: NextRequest) {
       const existingSession = sessionMap.get(slot.time);
       
       if (existingSession) {
-        // Check if it's a waiting session with matching language
-        if (
-          (existingSession as any).status === 'waiting' &&
-          (existingSession as any).user1_id !== user.id &&
-          (existingSession as any).profiles?.language === (profile as any).language
-        ) {
+        const session = existingSession as any;
+        
+        // If this is the current user's own session, show as unavailable to them
+        if (session.user1_id === user.id || session.user2_id === user.id) {
           return {
             ...slot,
             date: selectedDate.toISOString().split('T')[0],
-            available: true,
-            status: 'waiting',
-            waitingUser: {
-              firstName: (existingSession as any).profiles.first_name,
-              duration: (existingSession as any).duration,
-            },
-            sessionId: (existingSession as any).id,
+            available: false,
+            status: 'unavailable',
           };
         }
         
-        // Session is already matched or not compatible
+        // Check if it's a waiting session with matching language
+        if (session.status === 'waiting') {
+          const waitingUserProfile = session.user1_profile || session.user2_profile;
+          
+          if (waitingUserProfile?.language === profile.language) {
+            return {
+              ...slot,
+              date: selectedDate.toISOString().split('T')[0],
+              available: true,
+              status: 'waiting',
+              waitingUser: {
+                firstName: waitingUserProfile.first_name,
+                duration: session.duration,
+              },
+              sessionId: session.id,
+            };
+          }
+        }
+        
+        // Session is already matched, different language, or not compatible
         return {
           ...slot,
           date: selectedDate.toISOString().split('T')[0],
