@@ -60,7 +60,7 @@ export function SessionControls({
       {/* Controls Bar */}
       <div className="bg-gradient-to-t from-black/95 via-black/80 to-transparent backdrop-blur-md border-t border-white/10">
         <div className="flex items-center justify-center gap-3 p-4">
-          {/* Help/Instructions - More accessible */}
+          {/* Help/Instructions - Temporarily hidden 
           <div className="dropdown dropdown-top dropdown-end">
             <div
               tabIndex={0}
@@ -108,6 +108,7 @@ export function SessionControls({
               </li>
             </ul>
           </div>
+          */}
 
           {/* Report Issue - More prominent */}
           <button
