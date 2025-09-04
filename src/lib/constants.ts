@@ -1,9 +1,11 @@
 // Application constants
 
 export const LANGUAGES = [
-  { code: 'en' as const, name: 'English' },
-  { code: 'nl' as const, name: 'Nederlands' },
-  { code: 'fr' as const, name: 'Français' },
+  { code: 'en' as const, name: 'English', nativeName: 'English' },
+  { code: 'nl' as const, name: 'Dutch', nativeName: 'Nederlands' },
+  { code: 'fr' as const, name: 'French', nativeName: 'Français' },
+  { code: 'es' as const, name: 'Spanish', nativeName: 'Español' },
+  { code: 'de' as const, name: 'German', nativeName: 'Deutsch' },
 ];
 
 export const SESSION_DURATIONS = [25, 50] as const;

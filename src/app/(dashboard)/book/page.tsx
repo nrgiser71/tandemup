@@ -152,7 +152,7 @@ export default function BookSessionPage() {
             <CalendarGrid
               selectedDate={selectedDate}
               onSlotClick={handleSlotClick}
-              userLanguage={profile.language}
+              userLanguage={profile.languages?.[0] || 'en'}
             />
 
             {/* Apple-Style Floating Legend */}

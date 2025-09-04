@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { LANGUAGES, TIMEZONE_OPTIONS } from '@/lib/constants';
+import { MultiLanguageSelect } from '@/components/features/MultiLanguageSelect';
+import type { Languages } from '@/types/database';
 import { 
   User, 
   Mail, 
@@ -21,7 +23,7 @@ export default function ProfilePage() {
   
   const [formData, setFormData] = useState({
     firstName: profile?.first_name || '',
-    language: profile?.language || 'en',
+    languages: (profile?.languages || ['en']) as Languages,
     timezone: profile?.timezone || 'UTC',
   });
   
@@ -52,7 +54,7 @@ export default function ProfilePage() {
     try {
       const { error } = await updateProfile({
         first_name: formData.firstName.trim(),
-        language: formData.language as 'en' | 'nl' | 'fr',
+        languages: formData.languages,
         timezone: formData.timezone,
       });
 
@@ -351,33 +353,21 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  {/* Language */}
+                  {/* Languages */}
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text flex items-center gap-2">
                         <Globe className="w-4 h-4" />
-                        Language
+                        Languages
                       </span>
                     </label>
-                    <select
-                      value={formData.language}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        language: e.target.value as 'en' | 'nl' | 'fr' 
-                      }))}
-                      className="select select-bordered"
-                    >
-                      {LANGUAGES.map(lang => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.name}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="label">
-                      <span className="label-text-alt text-xs text-base-content/60">
-                        Used for matching with other users
-                      </span>
-                    </label>
+                    <MultiLanguageSelect
+                      value={formData.languages}
+                      onChange={(languages) => setFormData(prev => ({ ...prev, languages }))}
+                      label=""
+                      placeholder="Select the languages you speak..."
+                      helperText="Used for matching with other users"
+                    />
                   </div>
 
                   {/* Timezone */}

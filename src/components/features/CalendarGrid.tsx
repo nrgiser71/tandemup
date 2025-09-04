@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { generateTimeSlots } from '@/lib/utils';
 import { TimeSlot } from '@/types';
+import { LanguageCode } from '@/types/database';
 import { Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { SessionCard } from './SessionCard';
@@ -10,7 +11,7 @@ import { SessionCard } from './SessionCard';
 interface CalendarGridProps {
   selectedDate: Date;
   onSlotClick: (slot: TimeSlot) => void;
-  userLanguage: 'en' | 'nl' | 'fr';
+  userLanguage: LanguageCode;
 }
 
 export function CalendarGrid({

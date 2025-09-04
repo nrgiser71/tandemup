@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         data: {
           first_name: data.firstName,
-          language: data.language,
+          languages: data.languages,
           timezone: data.timezone,
         },
       },

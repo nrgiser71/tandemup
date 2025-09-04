@@ -69,7 +69,7 @@ export function BookingModal({
         userProfile: {
           id: userProfile.id,
           firstName: userProfile.first_name,
-          language: userProfile.language
+          languages: userProfile.languages
         }
       });
 
@@ -195,7 +195,7 @@ export function BookingModal({
             <div>
               <div className="font-medium">You: {userProfile.first_name}</div>
               <div className="text-sm text-base-content/60">
-                Language: {userProfile.language.toUpperCase()} • 
+                Languages: {userProfile.languages.map(l => l.toUpperCase()).join(', ')} • 
                 Timezone: {userProfile.timezone}
               </div>
             </div>

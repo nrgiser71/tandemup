@@ -1,9 +1,13 @@
 // Database types matching the PRD schema
 
+// Language types
+export type LanguageCode = 'en' | 'nl' | 'fr' | 'es' | 'de';
+export type Languages = LanguageCode[];
+
 export interface Profile {
   id: string;
   first_name: string;
-  language: 'en' | 'nl' | 'fr';
+  languages: Languages;
   timezone: string;
   avatar_url?: string;
   subscription_status: 'trial' | 'active' | 'inactive' | 'past_due' | 'cancelled';

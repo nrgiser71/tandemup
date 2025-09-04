@@ -1,5 +1,5 @@
 // Authentication related types
-import { Profile } from './database';
+import { Profile, LanguageCode, Languages } from './database';
 
 // Supabase User type - simplified version
 export interface User {
@@ -13,7 +13,7 @@ export interface SignUpData {
   email: string;
   password: string;
   firstName: string;
-  language: 'en' | 'nl' | 'fr';
+  languages: Languages;
   timezone: string;
   acceptTerms: boolean;
 }
@@ -29,10 +29,10 @@ export interface ResetPasswordData {
 }
 
 export interface ProfileUpdate {
-  firstName?: string;
-  language?: 'en' | 'nl' | 'fr';
+  first_name?: string;
+  languages?: Languages;
   timezone?: string;
-  avatarUrl?: string;
+  avatar_url?: string;
 }
 
 export interface AuthState {

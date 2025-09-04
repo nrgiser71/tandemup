@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthLayout } from '@/components/layouts/AuthLayout';
 import { ROUTES, LANGUAGES, TIMEZONE_OPTIONS } from '@/lib/constants';
 import { validateEmail, validatePassword, getUserTimezone } from '@/lib/utils';
+import { MultiLanguageSelect } from '@/components/features/MultiLanguageSelect';
+import type { Languages } from '@/types/database';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function SignUpPage() {
@@ -18,7 +20,7 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: '',
     firstName: '',
-    language: 'en' as 'en' | 'nl' | 'fr',
+    languages: ['en'] as Languages,
     timezone: getUserTimezone(),
     acceptTerms: false,
   });
@@ -53,6 +55,11 @@ export default function SignUpPage() {
       return;
     }
 
+    if (formData.languages.length === 0) {
+      setError('Please select at least one language');
+      return;
+    }
+
     if (!formData.acceptTerms) {
       setError('Please accept the terms of service');
       return;
@@ -65,7 +72,7 @@ export default function SignUpPage() {
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName.trim(),
-        language: formData.language,
+        languages: formData.languages,
         timezone: formData.timezone,
         acceptTerms: formData.acceptTerms,
       });
@@ -188,22 +195,18 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        {/* Language */}
+        {/* Languages */}
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Language</span>
+            <span className="label-text">Languages</span>
           </label>
-          <select
-            value={formData.language}
-            onChange={(e) => setFormData(prev => ({ ...prev, language: e.target.value as 'en' | 'nl' | 'fr' }))}
-            className="select select-bordered"
-          >
-            {LANGUAGES.map(lang => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+          <MultiLanguageSelect
+            value={formData.languages}
+            onChange={(languages) => setFormData(prev => ({ ...prev, languages }))}
+            label=""
+            placeholder="Select the languages you speak..."
+            helperText="You can select multiple languages to match with more users"
+          />
         </div>
 
         {/* Timezone */}
