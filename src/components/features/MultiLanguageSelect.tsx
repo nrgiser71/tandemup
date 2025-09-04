@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChevronDown, Check, X, Globe } from 'lucide-react';
 import { LanguageCode, Languages } from '@/types/database';
 import { LANGUAGES } from '@/lib/constants';
@@ -35,6 +35,21 @@ export function MultiLanguageSelect({
   className = "",
 }: MultiLanguageSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
   // Create a map of language codes to language objects for quick lookup
   const languageMap = new Map(
@@ -45,11 +60,6 @@ export function MultiLanguageSelect({
   const selectedLanguages = value
     .map(code => languageMap.get(code))
     .filter(Boolean) as typeof LANGUAGES;
-
-  // Get unselected language options
-  const availableLanguages = LANGUAGES.filter(
-    lang => !value.includes(lang.code)
-  );
 
   const handleToggleLanguage = useCallback((languageCode: LanguageCode) => {
     if (disabled) return;
@@ -78,14 +88,12 @@ export function MultiLanguageSelect({
     onChange(newSelection);
   }, [value, onChange, disabled]);
 
-  const handleDropdownToggle = useCallback(() => {
+  const handleDropdownToggle = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (disabled) return;
     setIsOpen(prev => !prev);
   }, [disabled]);
-
-  const handleDropdownClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
 
   // Validation: At least 1 language must be selected
   const hasMinimumSelection = value.length >= 1;
@@ -125,6 +133,7 @@ export function MultiLanguageSelect({
                 <button
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     handleRemoveLanguage(language.code);
                   }}
@@ -140,17 +149,11 @@ export function MultiLanguageSelect({
       )}
 
       {/* Dropdown Container */}
-      <div className="dropdown w-full">
-        <div
-          tabIndex={0}
-          role="button"
+      <div className="relative w-full" ref={dropdownRef}>
+        <button
+          type="button"
           onClick={handleDropdownToggle}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleDropdownToggle();
-            }
-          }}
+          disabled={disabled}
           className={`select select-bordered w-full flex items-center justify-between ${
             showError ? 'select-error' : ''
           } ${
@@ -159,7 +162,7 @@ export function MultiLanguageSelect({
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
-          <span className={`flex-1 ${
+          <span className={`flex-1 text-left ${
             selectedLanguages.length === 0 ? 'text-base-content/50' : 'text-base-content'
           }`}>
             {selectedLanguages.length === 0 
@@ -170,65 +173,61 @@ export function MultiLanguageSelect({
           <ChevronDown className={`w-4 h-4 transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`} />
-        </div>
+        </button>
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <ul
-            tabIndex={0}
-            className="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-lg border border-base-300 max-h-60 overflow-auto"
-            role="listbox"
-            aria-label="Select languages"
-          >
-            {LANGUAGES.map(language => {
-              const isSelected = value.includes(language.code);
-              const isLastSelected = isSelected && value.length === 1;
-              
-              return (
-                <li key={language.code}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleToggleLanguage(language.code);
-                      // Don't close dropdown after selection to allow multi-select
-                    }}
-                    disabled={isLastSelected} // Prevent removing the last language
-                    className={`flex items-center justify-between w-full px-4 py-3 text-left rounded-lg transition-colors ${
-                      isSelected 
-                        ? 'bg-primary/10 text-primary border border-primary/20' 
-                        : 'hover:bg-base-200'
-                    } ${
-                      isLastSelected ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    role="option"
-                    aria-selected={isSelected}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {language.nativeName}
-                        </span>
-                        <span className="text-xs text-base-content/60">
-                          {language.name}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-3 h-3 text-primary-content" />
+          <div className="absolute top-full left-0 right-0 z-50 mt-1">
+            <ul className="menu bg-base-100 rounded-box p-2 shadow-lg border border-base-300 max-h-60 overflow-auto">
+              {LANGUAGES.map(language => {
+                const isSelected = value.includes(language.code);
+                const isLastSelected = isSelected && value.length === 1;
+                
+                return (
+                  <li key={language.code}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleLanguage(language.code);
+                      }}
+                      disabled={isLastSelected}
+                      className={`flex items-center justify-between w-full px-4 py-3 text-left rounded-lg transition-colors ${
+                        isSelected 
+                          ? 'bg-primary/10 text-primary border border-primary/20' 
+                          : 'hover:bg-base-200'
+                      } ${
+                        isLastSelected ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {language.nativeName}
+                          </span>
+                          <span className="text-xs text-base-content/60">
+                            {language.name}
+                          </span>
                         </div>
-                      )}
-                      {!isSelected && (
-                        <div className="w-5 h-5 rounded-full border-2 border-base-300" />
-                      )}
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 text-primary-content" />
+                          </div>
+                        )}
+                        {!isSelected && (
+                          <div className="w-5 h-5 rounded-full border-2 border-base-300" />
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
       </div>
 
@@ -241,15 +240,6 @@ export function MultiLanguageSelect({
             {helperText}
           </span>
         </label>
-      )}
-
-      {/* Click Outside Handler */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-0"
-          onClick={handleDropdownClose}
-          aria-hidden="true"
-        />
       )}
     </div>
   );
