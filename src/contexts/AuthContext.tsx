@@ -169,8 +169,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      const { error } = await (supabase as any).from("profiles").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", user.id);
-      if (error) throw error;
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to update profile');
+      }
 
       // Refresh profile data
       await fetchProfile(user.id);

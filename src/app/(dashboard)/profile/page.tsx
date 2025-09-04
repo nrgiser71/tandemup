@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { LANGUAGES, TIMEZONE_OPTIONS } from '@/lib/constants';
@@ -26,6 +26,17 @@ export default function ProfilePage() {
     languages: (profile?.languages || ['en']) as Languages,
     timezone: profile?.timezone || 'UTC',
   });
+
+  // Sync form data with profile when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        firstName: profile.first_name || '',
+        languages: (profile.languages || ['en']) as Languages,
+        timezone: profile.timezone || 'UTC',
+      });
+    }
+  }, [profile]);
   
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
